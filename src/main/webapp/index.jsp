@@ -10,12 +10,9 @@
 <body>
 
     <header class="navbar">
-        <a href="${pageContext.request.contextPath}/dashboard" class="brand">
+        <a href="${pageContext.request.contextPath}/login" class="brand">
             <span>✨ Fundora</span>
             <span class="brand-badge">Mumbai University Full-Stack Java</span>
-        </a>
-        <a href="https://drive.google.com/drive/folders/1na8wxfnAwbS5o1-GlbSOibjOmlkwBQHj" target="_blank" rel="noopener noreferrer" class="btn btn-accent" style="text-decoration: none; padding: 0.35rem 0.85rem; font-size: 0.85rem; border-radius: 6px;">
-            📁 Assignment Drive
         </a>
     </header>
 
@@ -39,9 +36,11 @@
                 </ul>
             </div>
 
-            <a href="${pageContext.request.contextPath}/dashboard" class="btn btn-primary" style="font-size: 1.1rem; padding: 0.85rem 2rem;">
-                🚀 Launch Fundora Dashboard
-            </a>
+            <div style="display: flex; justify-content: center;">
+                <a href="${pageContext.request.contextPath}/login" class="btn btn-primary" style="font-size: 1.1rem; padding: 0.85rem 2.5rem;">
+                    🔐 Sign In / Switch Persona
+                </a>
+            </div>
         </div>
     </div>
 

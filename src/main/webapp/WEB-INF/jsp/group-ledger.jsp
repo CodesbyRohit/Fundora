@@ -12,15 +12,10 @@
 <body>
 
     <header class="navbar">
-        <div style="display: flex; align-items: center; gap: 1rem;">
-            <a href="${pageContext.request.contextPath}/dashboard" class="brand">
-                <span>✨ Fundora</span>
-                <span class="brand-badge">Audit Ledger</span>
-            </a>
-            <a href="https://drive.google.com/drive/folders/1na8wxfnAwbS5o1-GlbSOibjOmlkwBQHj" target="_blank" rel="noopener noreferrer" class="btn btn-accent" style="text-decoration: none; padding: 0.35rem 0.85rem; font-size: 0.85rem; border-radius: 6px;">
-                📁 Assignment
-            </a>
-        </div>
+        <a href="${pageContext.request.contextPath}/dashboard" class="brand">
+            <span>✨ Fundora</span>
+            <span class="brand-badge">Audit Ledger</span>
+        </a>
         <div style="display: flex; gap: 0.75rem;">
             <a href="${pageContext.request.contextPath}/dashboard?groupId=${not empty selectedGroupId ? selectedGroupId : (not empty ledger.group.id ? ledger.group.id : 1)}" class="btn btn-primary">
                 ⬅️ Back to Dashboard
