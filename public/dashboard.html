@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fundora - Social FinTech Dashboard</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header class="navbar">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <a href="/dashboard" class="brand">
+                <span>✨ Fundora</span>
+                <span class="brand-badge">Mumbai Univ Full-Stack Java</span>
+            </a>
+            <a href="https://drive.google.com/drive/folders/1na8wxfnAwbS5o1-GlbSOibjOmlkwBQHj" target="_blank" rel="noopener noreferrer" class="btn btn-accent" style="text-decoration: none; padding: 0.35rem 0.85rem; font-size: 0.85rem; border-radius: 6px;">
+                📁 Assignment
+            </a>
+        </div>
+        <div class="user-profile-badge">
+            <span id="userNameSpan">👤 <strong>Aarav Sharma</strong> (STUDENT)</span>
+            <span id="userWalletSpan" style="color: var(--accent); font-weight: bold;">Wallet: ₹2,500.00</span>
+            <span id="userUpiSpan" style="font-size: 0.8rem; color: var(--text-muted);">aarav@okhdfcbank</span>
+            <a href="/login" class="btn btn-nudge" style="padding: 0.25rem 0.65rem; font-size: 0.8rem; text-decoration: none;">
+                🚪 Switch Profile
+            </a>
+        </div>
+    </header>
+
+    <div class="container">
+
+        <!-- Group Selector Bar -->
+        <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 2rem; flex-wrap: wrap;">
+            <label style="color: var(--text-muted); font-weight: 600;">Active Group:</label>
+            <select id="groupSelect" onchange="switchGroup(this.value)" class="form-control" style="width: auto; min-width: 250px;">
+                <option value="1">Gokul Flat 402 (Powai) (FLATMATE_RECURRING)</option>
+                <option value="2">Goa Semester Break Trip (TRIP_EVENT)</option>
+            </select>
+            <div style="margin-left: auto; display: flex; gap: 0.75rem;">
+                <a href="https://drive.google.com/drive/folders/1na8wxfnAwbS5o1-GlbSOibjOmlkwBQHj" target="_blank" rel="noopener noreferrer" class="btn btn-accent" style="text-decoration: none;">
+                    📁 Assignment Folder
+                </a>
+                <a href="/ledger" class="btn btn-primary">
+                    📊 View Full Shared Ledger
+                </a>
+            </div>
+        </div>
+
+        <!-- Metric Cards -->
+        <div class="hero-stats-grid">
+            <div class="stat-card">
+                <div class="stat-title">Total Group Spending</div>
+                <div class="stat-value" id="totalSpendingVal">₹14,400.00</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Your Net Standing</div>
+                <div class="stat-value positive" id="netStandingVal">+₹3,600.00</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Active Members</div>
+                <div class="stat-value">4 Flatmates</div>
+            </div>
+        </div>
+
+        <!-- Main 2-Column Grid -->
+        <div class="grid-2col">
+            
+            <!-- Left Column: Debts & Recent Expenses -->
+            <div>
+                <!-- Simplified Debts ("Who Owes Whom") & Smart Nudges -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">🤝 Net Settlements & Smart Reminders</h2>
+                        <span style="font-size: 0.8rem; color: var(--text-muted);">Auto-Simplified Ledger</span>
+                    </div>
+
+                    <div id="debtsContainer">
+                        <div class="debt-item">
+                            <div class="debt-info">
+                                <span class="debt-names">Rohan Verma owes Aarav Sharma</span>
+                                <span class="debt-upi">UPI: aarav@okhdfcbank</span>
+                            </div>
+                            <div class="debt-actions">
+                                <span style="font-weight: 700; color: #fff; margin-right: 0.5rem;">₹3,600.00</span>
+                                <button class="btn btn-nudge" onclick="triggerClientNudge(this, 'Rohan Verma', '3,600.00')">Nudge 🔔</button>
+                                <button class="btn btn-upi" onclick="triggerClientSettle(this, 'Rohan Verma', '3,600.00')">Pay UPI ⚡</button>
+                            </div>
+                        </div>
+
+                        <div class="debt-item">
+                            <div class="debt-info">
+                                <span class="debt-names">Simran Kaur owes Aarav Sharma</span>
+                                <span class="debt-upi">UPI: aarav@okhdfcbank</span>
+                            </div>
+                            <div class="debt-actions">
+                                <span style="font-weight: 700; color: #fff; margin-right: 0.5rem;">₹3,600.00</span>
+                                <button class="btn btn-nudge" onclick="triggerClientNudge(this, 'Simran Kaur', '3,600.00')">Nudge 🔔</button>
+                                <button class="btn btn-upi" onclick="triggerClientSettle(this, 'Simran Kaur', '3,600.00')">Pay UPI ⚡</button>
+                            </div>
+                        </div>
+
+                        <div class="debt-item">
+                            <div class="debt-info">
+                                <span class="debt-names">Diya Patel owes Aarav Sharma</span>
+                                <span class="debt-upi">UPI: aarav@okhdfcbank</span>
+                            </div>
+                            <div class="debt-actions">
+                                <span style="font-weight: 700; color: #fff; margin-right: 0.5rem;">₹1,200.00</span>
+                                <button class="btn btn-nudge" onclick="triggerClientNudge(this, 'Diya Patel', '1,200.00')">Nudge 🔔</button>
+                                <button class="btn btn-upi" onclick="triggerClientSettle(this, 'Diya Patel', '1,200.00')">Pay UPI ⚡</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Add New Shared Expense Form -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">➕ Split a New Expense</h2>
+                    </div>
+                    <form onsubmit="handleNewExpense(event)">
+                        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem;">
+                            <div class="form-group">
+                                <label class="form-label">Expense Title / Description</label>
+                                <input type="text" id="expTitle" class="form-control" placeholder="e.g. D-Mart Grocery / WiFi Bill" required/>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Total Amount (₹)</label>
+                                <input type="number" step="0.01" id="expAmount" class="form-control" placeholder="0.00" required/>
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div class="form-group">
+                                <label class="form-label">Category</label>
+                                <select id="expCategory" class="form-control">
+                                    <option value="GROCERIES">Groceries & Food</option>
+                                    <option value="RENT">Room Rent / Deposit</option>
+                                    <option value="UTILITIES">WiFi / Electricity / Gas</option>
+                                    <option value="TRAVEL">Cabs / Flights / Fuel</option>
+                                    <option value="ENTERTAINMENT">Outing / Party</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Splitting Strategy</label>
+                                <select class="form-control">
+                                    <option value="EQUAL">Split Equally Among All</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">
+                            Record & Split Expense
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Recent Expenses Table -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">📜 Recent Group Expenses</h2>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Item</th>
+                                <th>Paid By</th>
+                                <th>Category</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody id="expenseTableBody">
+                            <tr>
+                                <td>2026-10-07</td>
+                                <td><strong>Monthly D-Mart Groceries & Supplies</strong></td>
+                                <td>Aarav Sharma</td>
+                                <td><span style="background: var(--bg-card-alt); padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">GROCERIES</span></td>
+                                <td class="amount-cell" data-amount="12000.00">₹12,000.00</td>
+                            </tr>
+                            <tr>
+                                <td>2026-10-06</td>
+                                <td><strong>High-Speed Fiber Internet Bill</strong></td>
+                                <td>Diya Patel</td>
+                                <td><span style="background: var(--bg-card-alt); padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">UTILITIES</span></td>
+                                <td class="amount-cell" data-amount="2400.00">₹2,400.00</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+
+            <!-- Right Column: Module V React Component -->
+            <div>
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">🏖️ Shared Trip & Goal Wallet</h2>
+                        <span style="font-size: 0.75rem; background: #4f46e5; padding: 0.2rem 0.5rem; border-radius: 4px;">React.js SPA</span>
+                    </div>
+                    <div id="staticReactContainer"></div>
+                </div>
+
+                <!-- Recent Settlements History -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">⚡ UPI Settlement Log</h2>
+                    </div>
+                    <div id="settlementsList">
+                        <div style="padding: 0.75rem 0; border-bottom: 1px solid var(--border-color); font-size: 0.85rem;">
+                            <div><strong>Diya Patel</strong> ➡️ <strong>Aarav Sharma</strong></div>
+                            <div style="display: flex; justify-content: space-between; color: var(--text-muted); margin-top: 0.25rem;">
+                                <span>Ref: UPI/FUNDORA/69F67F85</span>
+                                <span style="color: var(--accent); font-weight: bold;">₹600.00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script type="text/babel">
+        const { useState } = React;
+        function ClientSavingsTracker() {
+            const [goals, setGoals] = useState([
+                { id: 1, title: 'Living Room Smart TV Upgrade', current: 9000, target: 18000, status: 'ACTIVE' },
+                { id: 2, title: 'Goa Scuba Diving & Water Sports Fund', current: 14500, target: 20000, status: 'ACTIVE' }
+            ]);
+            const [contrib, setContrib] = useState({});
+
+            const addFund = (id) => {
+                const val = parseFloat(contrib[id] || 0);
+                if (val <= 0) return;
+                setGoals(goals.map(g => g.id === id ? { ...g, current: Math.min(g.target, g.current + val) } : g));
+                setContrib({ ...contrib, [id]: '' });
+            };
+
+            return (
+                <div>
+                    {goals.map(g => {
+                        const pct = Math.round((g.current / g.target) * 100);
+                        return (
+                            <div key={g.id} style={{ background: '#334155', padding: '1.25rem', borderRadius: '10px', marginBottom: '1rem', border: '1px solid #475569' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                                    <strong style={{ color: '#f8fafc', fontSize: '1rem' }}>{g.title}</strong>
+                                    <span style={{ background: '#06b6d4', color: '#fff', padding: '0.15rem 0.5rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 'bold' }}>{g.status}</span>
+                                </div>
+                                <div style={{ background: '#1e293b', borderRadius: '9999px', height: '14px', overflow: 'hidden', marginBottom: '0.75rem' }}>
+                                    <div style={{ width: `${pct}%`, background: 'linear-gradient(90deg, #4f46e5, #06b6d4)', height: '100%', transition: 'width 0.4s' }}></div>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: '#94a3b8', marginBottom: '0.75rem' }}>
+                                    <span>Saved: <strong style={{ color: '#10b981' }}>₹{g.current.toLocaleString()}</strong></span>
+                                    <span>Target: ₹{g.target.toLocaleString()} ({pct}%)</span>
+                                </div>
+                                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                    <input type="number" placeholder="Contribute ₹" value={contrib[g.id] || ''} onChange={(e) => setContrib({ ...contrib, [g.id]: e.target.value })} style={{ flex: 1, padding: '0.45rem', background: '#0f172a', border: '1px solid #475569', borderRadius: '6px', color: '#fff' }}/>
+                                    <button onClick={() => addFund(g.id)} style={{ background: '#10b981', color: '#fff', border: 'none', borderRadius: '6px', padding: '0.45rem 0.9rem', cursor: 'pointer', fontWeight: 'bold' }}>+ Add</button>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            );
+        }
+        ReactDOM.createRoot(document.getElementById('staticReactContainer')).render(<ClientSavingsTracker />);
+    </script>
+
+    <script>
+        function triggerClientNudge(btn, name, amt) {
+            btn.disabled = true;
+            btn.innerText = 'Nudged ✔';
+            btn.classList.add('btn-accent');
+            alert(`✨ Smart Nudge sent to ${name} for ₹${amt}!`);
+        }
+        function triggerClientSettle(btn, name, amt) {
+            btn.disabled = true;
+            btn.innerText = 'Settled ⚡';
+            alert(`🎉 Settled ₹${amt} via UPI with ${name}! Ref: UPI/FUNDORA/` + Math.floor(100000 + Math.random() * 900000));
+        }
+        function handleNewExpense(e) {
+            e.preventDefault();
+            const title = document.getElementById('expTitle').value;
+            const amt = parseFloat(document.getElementById('expAmount').value);
+            const cat = document.getElementById('expCategory').value;
+            const tbody = document.getElementById('expenseTableBody');
+            const row = document.createElement('tr');
+            row.innerHTML = `<td>Today</td><td><strong>${title}</strong></td><td>You</td><td><span style="background: var(--bg-card-alt); padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">${cat}</span></td><td class="amount-cell">₹${amt.toFixed(2)}</td>`;
+            tbody.prepend(row);
+            alert(`✅ Expense "${title}" of ₹${amt} recorded and split equally!`);
+            document.getElementById('expTitle').value = '';
+            document.getElementById('expAmount').value = '';
+        }
+        function switchGroup(val) {
+            if (val === '2') {
+                document.getElementById('totalSpendingVal').innerText = '₹16,000.00';
+                document.getElementById('netStandingVal').innerText = '-₹4,000.00';
+                document.getElementById('netStandingVal').className = 'stat-value negative';
+            } else {
+                document.getElementById('totalSpendingVal').innerText = '₹14,400.00';
+                document.getElementById('netStandingVal').innerText = '+₹3,600.00';
+                document.getElementById('netStandingVal').className = 'stat-value positive';
+            }
+        }
+    </script>
+</body>
+</html>

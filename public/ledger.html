@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fundora - Detailed Group Ledger</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+
+    <header class="navbar">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <a href="/dashboard" class="brand">
+                <span>✨ Fundora</span>
+                <span class="brand-badge">Audit Ledger</span>
+            </a>
+            <a href="https://drive.google.com/drive/folders/1na8wxfnAwbS5o1-GlbSOibjOmlkwBQHj" target="_blank" rel="noopener noreferrer" class="btn btn-accent" style="text-decoration: none; padding: 0.35rem 0.85rem; font-size: 0.85rem; border-radius: 6px;">
+                📁 Assignment
+            </a>
+        </div>
+        <div style="display: flex; gap: 0.75rem;">
+            <a href="/dashboard" class="btn btn-primary">
+                ⬅️ Back to Dashboard
+            </a>
+            <a href="/login" class="btn btn-nudge" style="text-decoration: none;">
+                🚪 Logout
+            </a>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h1 class="card-title" style="font-size: 1.5rem;">Gokul Flat 402 (Powai)</h1>
+                    <p style="color: var(--text-muted);">Monthly Rent, WiFi, Cook, & Grocery Split</p>
+                </div>
+                <span class="brand-badge">FLATMATE_RECURRING</span>
+            </div>
+
+            <!-- Net balances summary breakdown -->
+            <h3 style="margin-bottom: 1rem; color: #fff;">👥 Individual Net Balance Breakdown</h3>
+            <table class="data-table" style="margin-bottom: 2rem;">
+                <thead>
+                    <tr>
+                        <th>Member Name</th>
+                        <th>Email / UPI</th>
+                        <th>Net Balance Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Aarav Sharma</strong></td>
+                        <td>aarav@okhdfcbank</td>
+                        <td style="font-weight: bold; color: var(--accent);">+₹8,400.00 <span style="font-size: 0.8rem; font-weight: normal; color: var(--text-muted);">(gets back)</span></td>
+                        <td><span style="color: var(--accent); font-size: 0.85rem;">Clear</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Diya Patel</strong></td>
+                        <td>diya@icici</td>
+                        <td style="font-weight: bold; color: var(--danger);">-₹1,200.00 <span style="font-size: 0.8rem; font-weight: normal; color: var(--text-muted);">(owes)</span></td>
+                        <td><span style="color: var(--warning); font-size: 0.85rem;">Pending Settlement</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Rohan Verma</strong></td>
+                        <td>rohan@paytm</td>
+                        <td style="font-weight: bold; color: var(--danger);">-₹3,600.00 <span style="font-size: 0.8rem; font-weight: normal; color: var(--text-muted);">(owes)</span></td>
+                        <td><span style="color: var(--warning); font-size: 0.85rem;">Pending Settlement</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Simran Kaur</strong></td>
+                        <td>simran@axisbank</td>
+                        <td style="font-weight: bold; color: var(--danger);">-₹3,600.00 <span style="font-size: 0.8rem; font-weight: normal; color: var(--text-muted);">(owes)</span></td>
+                        <td><span style="color: var(--warning); font-size: 0.85rem;">Pending Settlement</span></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Itemized Expenses with Split Breakdowns -->
+            <h3 style="margin-bottom: 1rem; color: #fff;">🧾 Itemized Expense & Split Allocation Audit</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Title</th>
+                        <th>Paid By</th>
+                        <th>Amount</th>
+                        <th>Splits Breakdown</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>2026-10-07</td>
+                        <td><strong>Monthly D-Mart Groceries & Supplies</strong></td>
+                        <td>Aarav Sharma</td>
+                        <td style="color: var(--secondary); font-weight: bold;">₹12,000.00</td>
+                        <td>
+                            <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
+                                <span style="background: var(--bg-card-alt); padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">Aarav: ₹3,000.00</span>
+                                <span style="background: var(--bg-card-alt); padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">Diya: ₹3,000.00</span>
+                                <span style="background: var(--bg-card-alt); padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">Rohan: ₹3,000.00</span>
+                                <span style="background: var(--bg-card-alt); padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">Simran: ₹3,000.00</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>2026-10-06</td>
+                        <td><strong>High-Speed Fiber Internet Bill</strong></td>
+                        <td>Diya Patel</td>
+                        <td style="color: var(--secondary); font-weight: bold;">₹2,400.00</td>
+                        <td>
+                            <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
+                                <span style="background: var(--bg-card-alt); padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">Aarav: ₹600.00</span>
+                                <span style="background: var(--bg-card-alt); padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">Diya: ₹600.00</span>
+                                <span style="background: var(--bg-card-alt); padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">Rohan: ₹600.00</span>
+                                <span style="background: var(--bg-card-alt); padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">Simran: ₹600.00</span>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</body>
+</html>

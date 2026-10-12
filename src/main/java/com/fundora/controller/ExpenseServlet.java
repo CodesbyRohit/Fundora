@@ -67,12 +67,12 @@ public class ExpenseServlet extends HttpServlet {
         request.setAttribute("groups", userGroups);
         request.setAttribute("selectedGroupId", groupId);
 
-        if ("/ledger".equals(path) || (groupIdParam != null && !groupIdParam.isEmpty())) {
+        if ("/ledger".equals(path)) {
             LedgerSummaryDTO ledgerSummary = ledgerService.getGroupLedger(groupId);
             request.setAttribute("ledger", ledgerSummary);
             request.getRequestDispatcher("/WEB-INF/jsp/group-ledger.jsp").forward(request, response);
         } else {
-            // Dashboard view
+            // Dashboard view (handles /dashboard and /expenses)
             LedgerSummaryDTO defaultLedger = ledgerService.getGroupLedger(groupId);
             request.setAttribute("ledger", defaultLedger);
             request.setAttribute("savingsGoals", savingsGoalService.getAllGoals());

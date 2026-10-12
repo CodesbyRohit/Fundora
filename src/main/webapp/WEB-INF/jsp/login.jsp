@@ -87,6 +87,9 @@
             <span>✨ Fundora</span>
             <span class="brand-badge">Authentication</span>
         </a>
+        <a href="https://drive.google.com/drive/folders/1na8wxfnAwbS5o1-GlbSOibjOmlkwBQHj" target="_blank" rel="noopener noreferrer" class="btn btn-accent" style="text-decoration: none; padding: 0.35rem 0.85rem; font-size: 0.85rem; border-radius: 6px;">
+            📁 Assignment Drive
+        </a>
     </header>
 
     <div class="login-container">

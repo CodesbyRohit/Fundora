@@ -17,10 +17,15 @@
 
     <!-- Header Navigation -->
     <header class="navbar">
-        <a href="${pageContext.request.contextPath}/dashboard" class="brand">
-            <span>✨ Fundora</span>
-            <span class="brand-badge">Mumbai Univ Full-Stack Java</span>
-        </a>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <a href="${pageContext.request.contextPath}/dashboard" class="brand">
+                <span>✨ Fundora</span>
+                <span class="brand-badge">Mumbai Univ Full-Stack Java</span>
+            </a>
+            <a href="https://drive.google.com/drive/folders/1na8wxfnAwbS5o1-GlbSOibjOmlkwBQHj" target="_blank" rel="noopener noreferrer" class="btn btn-accent" style="text-decoration: none; padding: 0.35rem 0.85rem; font-size: 0.85rem; border-radius: 6px;">
+                📁 Assignment
+            </a>
+        </div>
         <div class="user-profile-badge">
             <span>👤 <strong><c:out value="${currentUser.name}"/></strong> (<c:out value="${currentUser.role}"/>)</span>
             <span style="color: var(--accent); font-weight: bold;">Wallet: ₹<fmt:formatNumber value="${currentUser.walletBalance}" type="number" minFractionDigits="2"/></span>
@@ -34,7 +39,7 @@
     <div class="container">
 
         <!-- Group Selector Bar -->
-        <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 2rem;">
+        <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 2rem; flex-wrap: wrap;">
             <label style="color: var(--text-muted); font-weight: 600;">Active Group:</label>
             <form action="${pageContext.request.contextPath}/dashboard" method="GET" style="display: flex; gap: 0.75rem;">
                 <select name="groupId" onchange="this.form.submit()" class="form-control" style="width: auto; min-width: 250px;">
@@ -45,9 +50,14 @@
                     </c:forEach>
                 </select>
             </form>
-            <a href="${pageContext.request.contextPath}/ledger?groupId=${selectedGroupId}" class="btn btn-primary" style="margin-left: auto;">
-                📊 View Full Shared Ledger
-            </a>
+            <div style="margin-left: auto; display: flex; gap: 0.75rem;">
+                <a href="https://drive.google.com/drive/folders/1na8wxfnAwbS5o1-GlbSOibjOmlkwBQHj" target="_blank" rel="noopener noreferrer" class="btn btn-accent" style="text-decoration: none;">
+                    📁 Assignment Folder
+                </a>
+                <a href="${pageContext.request.contextPath}/ledger?groupId=${selectedGroupId}" class="btn btn-primary">
+                    📊 View Full Shared Ledger
+                </a>
+            </div>
         </div>
 
         <!-- Metric Cards -->
