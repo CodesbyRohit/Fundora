@@ -1,27 +1,25 @@
 {
-  "version": 2,
-  "public": true,
   "cleanUrls": true,
-  "routes": [
+  "rewrites": [
     {
-      "src": "/static/(.*)",
-      "dest": "/static/$1"
+      "source": "/static/(.*)",
+      "destination": "/static/$1"
     },
     {
-      "src": "/login",
-      "dest": "/login.html"
+      "source": "/login",
+      "destination": "/login.html"
     },
     {
-      "src": "/dashboard",
-      "dest": "/dashboard.html"
+      "source": "/dashboard",
+      "destination": "/dashboard.html"
     },
     {
-      "src": "/ledger",
-      "dest": "/ledger.html"
+      "source": "/ledger",
+      "destination": "/ledger.html"
     },
     {
-      "src": "/",
-      "dest": "/index.html"
+      "source": "/",
+      "destination": "/index.html"
     }
   ]
 }
