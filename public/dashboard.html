@@ -4,17 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fundora - Social FinTech Dashboard</title>
-    <link rel="stylesheet" href="/static/css/styles.css">
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link rel="stylesheet" href="static/css/styles.css">
+    <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone@7.26.4/babel.min.js"></script>
+    <script src="static/js/demo-data.js"></script>
 </head>
 <body>
 
     <!-- Header Navigation -->
     <header class="navbar">
         <div style="display: flex; align-items: center; gap: 1rem;">
-            <a href="/dashboard" class="brand">
+            <a href="dashboard.html" class="brand">
                 <span>✨ Fundora</span>
                 <span class="brand-badge">Mumbai Univ Full-Stack Java</span>
             </a>
@@ -23,10 +24,10 @@
             </a>
         </div>
         <div class="user-profile-badge">
-            <span id="userNameSpan">👤 <strong>Dnyaneshwar Sangale</strong> (STUDENT)</span>
-            <span id="userWalletSpan" style="color: var(--accent); font-weight: bold;">Wallet: ₹2,500.00</span>
-            <span id="userUpiSpan" style="font-size: 0.8rem; color: var(--text-muted);">dnyaneshwar@okhdfcbank</span>
-            <a href="/login" class="btn btn-nudge" style="padding: 0.25rem 0.65rem; font-size: 0.8rem; text-decoration: none;">
+            <span>👤 <strong id="userName"></strong> (<span id="userRole"></span>)</span>
+            <span id="userWallet" style="color: var(--accent); font-weight: bold;"></span>
+            <span id="userUpi" style="font-size: 0.8rem; color: var(--text-muted);"></span>
+            <a href="login.html" class="btn btn-nudge" style="padding: 0.25rem 0.65rem; font-size: 0.8rem; text-decoration: none;">
                 🚪 Switch Profile
             </a>
         </div>
@@ -34,21 +35,23 @@
 
     <div class="container">
 
+        <div class="alert-box alert-success" style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;">
+            <span>🧪 Static demo: data lives in your browser only. Run the Spring Boot app for the full-stack version.</span>
+            <button type="button" class="btn btn-nudge" style="padding: 0.25rem 0.65rem; font-size: 0.8rem;" onclick="resetDemo()">↺ Reset demo data</button>
+        </div>
+
         <!-- Group Selector Bar -->
         <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 2rem; flex-wrap: wrap;">
-            <label style="color: var(--text-muted); font-weight: 600;">Active Group:</label>
-            <select id="groupSelect" onchange="switchGroup(this.value)" class="form-control" style="width: auto; min-width: 250px;">
-                <option value="1">Gokul Flat 402 (Powai) (FLATMATE_RECURRING)</option>
-                <option value="2">Goa Semester Break Trip (TRIP_EVENT)</option>
-            </select>
+            <label for="groupSelect" style="color: var(--text-muted); font-weight: 600;">Active Group:</label>
+            <select id="groupSelect" onchange="switchGroup(this.value)" class="form-control" style="width: auto; min-width: 250px;"></select>
             <button type="button" class="btn btn-accent" onclick="openCreateGroupModal()" style="display: flex; align-items: center; gap: 0.4rem; padding: 0.65rem 1.15rem; font-weight: 600; cursor: pointer;">
                 ➕ Create New Group
             </button>
-            <div style="margin-left: auto; display: flex; gap: 0.75rem;">
+            <div style="margin-left: auto; display: flex; gap: 0.75rem; flex-wrap: wrap;">
                 <a href="https://drive.google.com/drive/folders/1na8wxfnAwbS5o1-GlbSOibjOmlkwBQHj" target="_blank" rel="noopener noreferrer" class="btn btn-accent" style="text-decoration: none;">
                     📁 Assignment Folder
                 </a>
-                <a href="/ledger" class="btn btn-primary">
+                <a id="ledgerLink" href="ledger.html" class="btn btn-primary">
                     📊 View Full Shared Ledger
                 </a>
             </div>
@@ -58,21 +61,21 @@
         <div class="hero-stats-grid">
             <div class="stat-card">
                 <div class="stat-title">Total Group Spending</div>
-                <div class="stat-value" id="totalSpendingVal">₹14,400.00</div>
+                <div class="stat-value" id="totalSpendingVal"></div>
             </div>
             <div class="stat-card">
                 <div class="stat-title">Your Net Standing</div>
-                <div class="stat-value positive" id="netStandingVal">+₹3,600.00</div>
+                <div class="stat-value" id="netStandingVal"></div>
             </div>
             <div class="stat-card">
                 <div class="stat-title">Active Members</div>
-                <div class="stat-value" id="activeMembersVal">4 Flatmates</div>
+                <div class="stat-value" id="activeMembersVal"></div>
             </div>
         </div>
 
         <!-- Main 2-Column Grid -->
         <div class="grid-2col">
-            
+
             <!-- Left Column: Debts & Recent Expenses -->
             <div>
                 <!-- Simplified Debts ("Who Owes Whom") & Smart Nudges -->
@@ -81,44 +84,7 @@
                         <h2 class="card-title">🤝 Net Settlements & Smart Reminders</h2>
                         <span style="font-size: 0.8rem; color: var(--text-muted);">Auto-Simplified Ledger</span>
                     </div>
-
-                    <div id="debtsContainer">
-                        <div class="debt-item">
-                            <div class="debt-info">
-                                <span class="debt-names">Bharati Sharma owes Dnyaneshwar Sangale</span>
-                                <span class="debt-upi">UPI: dnyaneshwar@okhdfcbank</span>
-                            </div>
-                            <div class="debt-actions">
-                                <span style="font-weight: 700; color: #fff; margin-right: 0.5rem;">₹3,600.00</span>
-                                <button class="btn btn-nudge" onclick="triggerClientNudge(this, 'Bharati Sharma', '3,600.00')">Nudge 🔔</button>
-                                <button class="btn btn-upi" onclick="triggerClientSettle(this, 'Bharati Sharma', '3,600.00')">Pay UPI ⚡</button>
-                            </div>
-                        </div>
-
-                        <div class="debt-item">
-                            <div class="debt-info">
-                                <span class="debt-names">Atharva Sawant owes Dnyaneshwar Sangale</span>
-                                <span class="debt-upi">UPI: dnyaneshwar@okhdfcbank</span>
-                            </div>
-                            <div class="debt-actions">
-                                <span style="font-weight: 700; color: #fff; margin-right: 0.5rem;">₹3,600.00</span>
-                                <button class="btn btn-nudge" onclick="triggerClientNudge(this, 'Atharva Sawant', '3,600.00')">Nudge 🔔</button>
-                                <button class="btn btn-upi" onclick="triggerClientSettle(this, 'Atharva Sawant', '3,600.00')">Pay UPI ⚡</button>
-                            </div>
-                        </div>
-
-                        <div class="debt-item">
-                            <div class="debt-info">
-                                <span class="debt-names">Tejasvee Patil owes Dnyaneshwar Sangale</span>
-                                <span class="debt-upi">UPI: dnyaneshwar@okhdfcbank</span>
-                            </div>
-                            <div class="debt-actions">
-                                <span style="font-weight: 700; color: #fff; margin-right: 0.5rem;">₹1,200.00</span>
-                                <button class="btn btn-nudge" onclick="triggerClientNudge(this, 'Tejasvee Patil', '1,200.00')">Nudge 🔔</button>
-                                <button class="btn btn-upi" onclick="triggerClientSettle(this, 'Tejasvee Patil', '1,200.00')">Pay UPI ⚡</button>
-                            </div>
-                        </div>
-                    </div>
+                    <div id="debtsContainer"></div>
                 </div>
 
                 <!-- Add New Shared Expense Form -->
@@ -129,18 +95,18 @@
                     <form onsubmit="handleNewExpense(event)">
                         <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem;">
                             <div class="form-group">
-                                <label class="form-label">Expense Title / Description</label>
-                                <input type="text" id="expTitle" class="form-control" placeholder="e.g. D-Mart Grocery / WiFi Bill" required/>
+                                <label class="form-label" for="expTitle">Expense Title / Description</label>
+                                <input type="text" id="expTitle" maxlength="150" class="form-control" placeholder="e.g. D-Mart Grocery / WiFi Bill" required/>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Total Amount (₹)</label>
-                                <input type="number" step="0.01" id="expAmount" class="form-control" placeholder="0.00" required/>
+                                <label class="form-label" for="expAmount">Total Amount (₹)</label>
+                                <input type="number" step="0.01" min="0.01" id="expAmount" class="form-control" placeholder="0.00" required/>
                             </div>
                         </div>
 
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                             <div class="form-group">
-                                <label class="form-label">Category</label>
+                                <label class="form-label" for="expCategory">Category</label>
                                 <select id="expCategory" class="form-control">
                                     <option value="GROCERIES">Groceries & Food</option>
                                     <option value="RENT">Room Rent / Deposit</option>
@@ -150,8 +116,8 @@
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Splitting Strategy</label>
-                                <select class="form-control">
+                                <label class="form-label" for="expSplit">Splitting Strategy</label>
+                                <select id="expSplit" class="form-control">
                                     <option value="EQUAL">Split Equally Among All</option>
                                 </select>
                             </div>
@@ -178,22 +144,7 @@
                                 <th>Amount</th>
                             </tr>
                         </thead>
-                        <tbody id="expenseTableBody">
-                            <tr>
-                                <td>2026-10-07</td>
-                                <td><strong>Monthly D-Mart Groceries & Supplies</strong></td>
-                                <td>Dnyaneshwar Sangale</td>
-                                <td><span style="background: var(--bg-card-alt); padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">GROCERIES</span></td>
-                                <td class="amount-cell" data-amount="12000.00">₹12,000.00</td>
-                            </tr>
-                            <tr>
-                                <td>2026-10-06</td>
-                                <td><strong>High-Speed Fiber Internet Bill</strong></td>
-                                <td>Tejasvee Patil</td>
-                                <td><span style="background: var(--bg-card-alt); padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">UTILITIES</span></td>
-                                <td class="amount-cell" data-amount="2400.00">₹2,400.00</td>
-                            </tr>
-                        </tbody>
+                        <tbody id="expenseTableBody"></tbody>
                     </table>
                 </div>
 
@@ -214,15 +165,7 @@
                     <div class="card-header">
                         <h2 class="card-title">⚡ UPI Settlement Log</h2>
                     </div>
-                    <div id="settlementsList">
-                        <div style="padding: 0.75rem 0; border-bottom: 1px solid var(--border-color); font-size: 0.85rem;">
-                            <div><strong>Tejasvee Patil</strong> ➡️ <strong>Dnyaneshwar Sangale</strong></div>
-                            <div style="display: flex; justify-content: space-between; color: var(--text-muted); margin-top: 0.25rem;">
-                                <span>Ref: UPI/FUNDORA/69F67F85</span>
-                                <span style="color: var(--accent); font-weight: bold;">₹600.00</span>
-                            </div>
-                        </div>
-                    </div>
+                    <div id="settlementsList"></div>
                 </div>
             </div>
 
@@ -230,91 +173,32 @@
 
     </div>
 
-    <script type="text/babel">
-        const { useState } = React;
-        function ClientSavingsTracker() {
-            const [goals, setGoals] = useState([
-                { id: 1, title: 'Living Room Smart TV Upgrade', current: 9000, target: 18000, status: 'ACTIVE' },
-                { id: 2, title: 'Goa Scuba Diving & Water Sports Fund', current: 14500, target: 20000, status: 'ACTIVE' }
-            ]);
-            const [contrib, setContrib] = useState({});
-
-            const addFund = (id) => {
-                const val = parseFloat(contrib[id] || 0);
-                if (val <= 0) return;
-                setGoals(goals.map(g => g.id === id ? { ...g, current: Math.min(g.target, g.current + val) } : g));
-                setContrib({ ...contrib, [id]: '' });
-            };
-
-            return (
-                <div>
-                    {goals.map(g => {
-                        const pct = Math.round((g.current / g.target) * 100);
-                        return (
-                            <div key={g.id} style={{ background: '#334155', padding: '1.25rem', borderRadius: '10px', marginBottom: '1rem', border: '1px solid #475569' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                                    <strong style={{ color: '#f8fafc', fontSize: '1rem' }}>{g.title}</strong>
-                                    <span style={{ background: '#06b6d4', color: '#fff', padding: '0.15rem 0.5rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 'bold' }}>{g.status}</span>
-                                </div>
-                                <div style={{ background: '#1e293b', borderRadius: '9999px', height: '14px', overflow: 'hidden', marginBottom: '0.75rem' }}>
-                                    <div style={{ width: `${pct}%`, background: 'linear-gradient(90deg, #4f46e5, #06b6d4)', height: '100%', transition: 'width 0.4s' }}></div>
-                                </div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: '#94a3b8', marginBottom: '0.75rem' }}>
-                                    <span>Saved: <strong style={{ color: '#10b981' }}>₹{g.current.toLocaleString()}</strong></span>
-                                    <span>Target: ₹{g.target.toLocaleString()} ({pct}%)</span>
-                                </div>
-                                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                    <input type="number" placeholder="Contribute ₹" value={contrib[g.id] || ''} onChange={(e) => setContrib({ ...contrib, [g.id]: e.target.value })} style={{ flex: 1, padding: '0.45rem', background: '#0f172a', border: '1px solid #475569', borderRadius: '6px', color: '#fff' }}/>
-                                    <button onClick={() => addFund(g.id)} style={{ background: '#10b981', color: '#fff', border: 'none', borderRadius: '6px', padding: '0.45rem 0.9rem', cursor: 'pointer', fontWeight: 'bold' }}>+ Add</button>
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
-            );
-        }
-        ReactDOM.createRoot(document.getElementById('staticReactContainer')).render(<ClientSavingsTracker />);
-    </script>
-
     <!-- Create Group Modal -->
     <div id="createGroupModal" class="modal-overlay" style="display: none;">
         <div class="modal-card">
             <div class="modal-header">
                 <h3 style="color: #fff; margin: 0; font-size: 1.25rem;">✨ Create New Group</h3>
-                <button type="button" onclick="closeCreateGroupModal()" class="modal-close">&times;</button>
+                <button type="button" onclick="closeCreateGroupModal()" class="modal-close" aria-label="Close">&times;</button>
             </div>
             <form id="createGroupForm" onsubmit="handleCreateGroup(event)">
                 <div class="form-group">
-                    <label class="form-label">Group Name *</label>
-                    <input type="text" id="newGroupName" class="form-control" placeholder="e.g. Manali College Trip 2026 / Room 402 Groceries" required />
+                    <label class="form-label" for="newGroupName">Group Name *</label>
+                    <input type="text" id="newGroupName" maxlength="120" class="form-control" placeholder="e.g. Manali College Trip 2026 / Room 402 Groceries" required />
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Group Type</label>
+                    <label class="form-label" for="newGroupType">Group Type</label>
                     <select id="newGroupType" class="form-control">
                         <option value="FLATMATE_RECURRING">Flatmate & Monthly Recurring (Rent, Groceries, WiFi)</option>
                         <option value="TRIP_EVENT">Trip, Outing & Campus Event (Vacation, Parties)</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Description / Purpose</label>
-                    <input type="text" id="newGroupDesc" class="form-control" placeholder="e.g. Shared expenses among flatmates" />
+                    <label class="form-label" for="newGroupDesc">Description / Purpose</label>
+                    <input type="text" id="newGroupDesc" maxlength="255" class="form-control" placeholder="e.g. Shared expenses among flatmates" />
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Select Group Members (Flatmates)</label>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; background: var(--bg-card-alt); padding: 0.85rem; border-radius: 8px;">
-                        <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: #fff; cursor: pointer;">
-                            <input type="checkbox" name="groupMember" value="1" data-name="Dnyaneshwar Sangale" checked /> Dnyaneshwar Sangale
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: #fff; cursor: pointer;">
-                            <input type="checkbox" name="groupMember" value="2" data-name="Tejasvee Patil" checked /> Tejasvee Patil
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: #fff; cursor: pointer;">
-                            <input type="checkbox" name="groupMember" value="3" data-name="Bharati Sharma" checked /> Bharati Sharma
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: #fff; cursor: pointer;">
-                            <input type="checkbox" name="groupMember" value="4" data-name="Atharva Sawant" checked /> Atharva Sawant
-                        </label>
-                    </div>
+                    <span class="form-label">Select Group Members (Flatmates)</span>
+                    <div id="memberCheckboxes" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; background: var(--bg-card-alt); padding: 0.85rem; border-radius: 8px;"></div>
                 </div>
                 <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
                     <button type="button" class="btn btn-nudge" onclick="closeCreateGroupModal()">Cancel</button>
@@ -325,46 +209,120 @@
     </div>
 
     <script>
-        // Module IV & V: User persona persistence and active state
-        let currentUserName = "Dnyaneshwar Sangale";
-        const storedUser = localStorage.getItem('fundora_user');
-        if (storedUser) {
-            try {
-                const u = JSON.parse(storedUser);
-                if (u.name) {
-                    currentUserName = u.name;
-                    document.getElementById('userNameSpan').innerHTML = `👤 <strong>${u.name}</strong> (${u.role || 'STUDENT'})`;
-                }
-                if (u.wallet) {
-                    document.getElementById('userWalletSpan').innerText = `Wallet: ₹${u.wallet}`;
-                }
-                if (u.upi) {
-                    document.getElementById('userUpiSpan').innerText = u.upi;
-                }
-            } catch(e) { console.error(e); }
+        // Module IV: DOM rendering driven by the shared demo ledger engine (static/js/demo-data.js)
+        const esc = FundoraDemo.escapeHTML;
+        const inr = FundoraDemo.formatINR;
+        const me = FundoraDemo.currentUser();
+        let activeGroupId = null;
+
+        function showToast(message, type = 'info') {
+            let container = document.getElementById('toastContainer');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'toastContainer';
+                container.className = 'toast-container';
+                container.setAttribute('role', 'status');
+                document.body.appendChild(container);
+            }
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
         }
 
-        // Custom groups management (persisted in localStorage)
-        function loadCustomGroups() {
-            const saved = localStorage.getItem('fundora_custom_groups');
-            if (saved) {
-                try {
-                    const groups = JSON.parse(saved);
-                    const select = document.getElementById('groupSelect');
-                    groups.forEach(g => {
-                        if (!select.querySelector(`option[value="${g.id}"]`)) {
-                            const opt = document.createElement('option');
-                            opt.value = g.id;
-                            opt.innerText = `${g.name} (${g.groupType})`;
-                            select.appendChild(opt);
-                        }
-                    });
-                } catch(e) { console.error(e); }
-            }
+        function renderHeader() {
+            const u = FundoraDemo.currentUser();
+            document.getElementById('userName').textContent = u.name;
+            document.getElementById('userRole').textContent = u.role;
+            document.getElementById('userWallet').textContent = `Wallet: ₹${inr(u.wallet)}`;
+            document.getElementById('userUpi').textContent = u.upi;
         }
-        loadCustomGroups();
+
+        function renderGroupSelect() {
+            const select = document.getElementById('groupSelect');
+            select.innerHTML = '';
+            FundoraDemo.groupsFor(me.id).forEach(g => {
+                const opt = document.createElement('option');
+                opt.value = g.id;
+                opt.textContent = `${g.name} (${g.groupType})`;
+                select.appendChild(opt);
+            });
+            select.value = activeGroupId;
+        }
+
+        function renderMemberCheckboxes() {
+            document.getElementById('memberCheckboxes').innerHTML = FundoraDemo.USERS.map(u => `
+                <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: #fff; cursor: pointer;">
+                    <input type="checkbox" name="groupMember" value="${u.id}" checked ${u.id === me.id ? 'disabled' : ''} />
+                    ${esc(u.name)}${u.id === me.id ? ' (you)' : ''}
+                </label>`).join('');
+        }
+
+        function render() {
+            const L = FundoraDemo.ledger(activeGroupId);
+            renderHeader();
+            document.getElementById('ledgerLink').href = `ledger.html?groupId=${encodeURIComponent(activeGroupId)}`;
+            document.getElementById('totalSpendingVal').textContent = `₹${inr(L.total)}`;
+
+            const mine = L.balances[me.id] || 0;
+            const standing = document.getElementById('netStandingVal');
+            standing.textContent = `${mine < 0 ? '-' : '+'}₹${inr(Math.abs(mine))}`;
+            standing.className = 'stat-value ' + (mine < 0 ? 'negative' : 'positive');
+            document.getElementById('activeMembersVal').textContent = `${L.group.members.length} Members`;
+
+            const debts = document.getElementById('debtsContainer');
+            debts.innerHTML = L.debts.length === 0
+                ? '<p style="color: var(--accent); padding: 1rem 0;">🎉 All debts are completely settled in this group!</p>'
+                : L.debts.map((d, i) => {
+                    const from = FundoraDemo.user(d.from), to = FundoraDemo.user(d.to);
+                    return `
+                    <div class="debt-item">
+                        <div class="debt-info">
+                            <span class="debt-names">${esc(from.name)} owes ${esc(to.name)}</span>
+                            <span class="debt-upi">UPI: ${esc(to.upi)}</span>
+                        </div>
+                        <div class="debt-actions">
+                            <span style="font-weight: 700; color: #fff; margin-right: 0.5rem;">₹${inr(d.amount)}</span>
+                            ${d.to === me.id ? `<button class="btn btn-nudge" onclick="triggerClientNudge(this, ${i})">Nudge 🔔</button>` : ''}
+                            ${d.from === me.id ? `<button class="btn btn-upi" onclick="triggerClientSettle(this, ${i})">Pay UPI ⚡</button>` : ''}
+                        </div>
+                    </div>`;
+                }).join('');
+
+            const tbody = document.getElementById('expenseTableBody');
+            tbody.innerHTML = L.expenses.length === 0
+                ? '<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No expenses recorded yet in this group. Use "Split a New Expense" above!</td></tr>'
+                : L.expenses.map(e => `
+                    <tr>
+                        <td>${esc(e.date)}</td>
+                        <td><strong>${esc(e.title)}</strong></td>
+                        <td>${esc(FundoraDemo.user(e.paidBy).name)}</td>
+                        <td><span style="background: var(--bg-card-alt); padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">${esc(e.category)}</span></td>
+                        <td class="amount-cell" data-amount="${e.amount}" style="${e.amount > 5000 ? 'font-weight: bold; color: #38bdf8;' : ''}">₹${inr(e.amount)}</td>
+                    </tr>`).join('');
+
+            document.getElementById('settlementsList').innerHTML = L.settlements.length === 0
+                ? '<p style="color: var(--text-muted); font-size: 0.9rem;">No direct UPI settlements logged yet.</p>'
+                : L.settlements.map(s => `
+                    <div style="padding: 0.75rem 0; border-bottom: 1px solid var(--border-color); font-size: 0.85rem;">
+                        <div><strong>${esc(FundoraDemo.user(s.from).name)}</strong> ➡️ <strong>${esc(FundoraDemo.user(s.to).name)}</strong></div>
+                        <div style="display: flex; justify-content: space-between; color: var(--text-muted); margin-top: 0.25rem;">
+                            <span>Ref: ${esc(s.ref)}</span>
+                            <span style="color: var(--accent); font-weight: bold;">₹${inr(s.amount)}</span>
+                        </div>
+                    </div>`).join('');
+
+            if (window.renderSavings) window.renderSavings(activeGroupId);
+        }
+
+        function switchGroup(groupId) {
+            activeGroupId = groupId;
+            render();
+        }
 
         function openCreateGroupModal() {
+            renderMemberCheckboxes();
             document.getElementById('createGroupModal').style.display = 'flex';
             document.getElementById('newGroupName').focus();
         }
@@ -383,202 +341,132 @@
             if (e.target.id === 'createGroupModal') closeCreateGroupModal();
         });
 
-        async function handleCreateGroup(e) {
+        function handleCreateGroup(e) {
             e.preventDefault();
-            const name = document.getElementById('newGroupName').value.trim();
-            const groupType = document.getElementById('newGroupType').value;
-            const description = document.getElementById('newGroupDesc').value.trim();
-            
-            const selectedMembers = Array.from(document.querySelectorAll('input[name="groupMember"]:checked')).map(cb => ({
-                id: cb.value,
-                name: cb.getAttribute('data-name')
-            }));
-
-            if (!name) return;
-
-            const groupId = 'grp_' + Date.now();
-            const newGroup = {
-                id: groupId,
-                name,
-                groupType,
-                description,
-                members: selectedMembers,
-                createdAt: new Date().toISOString()
-            };
-
-            // Save to localStorage
-            const saved = localStorage.getItem('fundora_custom_groups');
-            const groupsList = saved ? JSON.parse(saved) : [];
-            groupsList.push(newGroup);
-            localStorage.setItem('fundora_custom_groups', JSON.stringify(groupsList));
-
-            // Add to dropdown and select
-            const select = document.getElementById('groupSelect');
-            const opt = document.createElement('option');
-            opt.value = groupId;
-            opt.innerText = `${name} (${groupType})`;
-            select.appendChild(opt);
-            select.value = groupId;
-
-            // Switch to the newly created group view
-            switchGroup(groupId, newGroup);
-
-            // Also post to backend if active
+            const memberIds = Array.from(document.querySelectorAll('input[name="groupMember"]:checked:not(:disabled)')).map(cb => cb.value);
             try {
-                fetch('/api/groups', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        name,
-                        description,
-                        groupType,
-                        memberIds: selectedMembers.map(m => parseInt(m.id))
-                    })
-                }).catch(() => {});
-            } catch(_) {}
-
-            closeCreateGroupModal();
-            alert(`🎉 Success! Group "${name}" created with ${selectedMembers.length} members. You can now split expenses in this group!`);
+                const g = FundoraDemo.createGroup(
+                    document.getElementById('newGroupName').value,
+                    document.getElementById('newGroupDesc').value,
+                    document.getElementById('newGroupType').value,
+                    me.id, memberIds);
+                activeGroupId = g.id;
+                renderGroupSelect();
+                render();
+                closeCreateGroupModal();
+                showToast(`🎉 Group "${g.name}" created with ${g.members.length} members.`, 'success');
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
         }
 
-        function triggerClientNudge(btn, name, amt) {
+        function triggerClientNudge(btn, index) {
+            const debt = FundoraDemo.ledger(activeGroupId).debts[index];
             btn.disabled = true;
-            btn.innerText = 'Nudged ✔';
+            btn.textContent = 'Nudged ✔';
             btn.classList.add('btn-accent');
-            alert(`✨ Smart Nudge sent to ${name} for ₹${amt}!`);
+            showToast(`✨ Smart Nudge sent to ${FundoraDemo.user(debt.from).name} for ₹${inr(debt.amount)}!`, 'success');
         }
 
-        function triggerClientSettle(btn, name, amt) {
-            btn.disabled = true;
-            btn.innerText = 'Settled ⚡';
-            alert(`🎉 Settled ₹${amt} via UPI with ${name}! Ref: UPI/FUNDORA/` + Math.floor(100000 + Math.random() * 900000));
+        function triggerClientSettle(btn, index) {
+            const debt = FundoraDemo.ledger(activeGroupId).debts[index];
+            const payee = FundoraDemo.user(debt.to);
+            if (!confirm(`Confirm UPI settlement of ₹${inr(debt.amount)} to ${payee.name} (${payee.upi})?`)) return;
+            try {
+                const ref = FundoraDemo.settle(activeGroupId, debt.from, debt.to, debt.amount);
+                render();
+                showToast(`🎉 Settled ₹${inr(debt.amount)} via UPI to ${payee.name}! Ref: ${ref}`, 'success');
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
         }
 
         function handleNewExpense(e) {
             e.preventDefault();
             const title = document.getElementById('expTitle').value;
-            const amt = parseFloat(document.getElementById('expAmount').value);
-            const cat = document.getElementById('expCategory').value;
-            const tbody = document.getElementById('expenseTableBody');
-            
-            // Remove empty placeholder row if present
-            const emptyRow = tbody.querySelector('.empty-row');
-            if (emptyRow) emptyRow.remove();
-
-            const row = document.createElement('tr');
-            row.innerHTML = `<td>Today</td><td><strong>${title}</strong></td><td>${currentUserName}</td><td><span style="background: var(--bg-card-alt); padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">${cat}</span></td><td class="amount-cell">₹${amt.toFixed(2)}</td>`;
-            tbody.prepend(row);
-
-            // Update Total Spending
-            const curSpendingElem = document.getElementById('totalSpendingVal');
-            let curVal = parseFloat(curSpendingElem.innerText.replace(/[₹,]/g, '')) || 0;
-            curVal += amt;
-            curSpendingElem.innerText = `₹${curVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-
-            alert(`✅ Expense "${title}" of ₹${amt.toFixed(2)} recorded and split equally!`);
-            document.getElementById('expTitle').value = '';
-            document.getElementById('expAmount').value = '';
-        }
-
-        function switchGroup(val, customObj) {
-            const debtsContainer = document.getElementById('debtsContainer');
-            const tbody = document.getElementById('expenseTableBody');
-
-            if (val === '2') {
-                document.getElementById('totalSpendingVal').innerText = '₹16,000.00';
-                document.getElementById('netStandingVal').innerText = '-₹4,000.00';
-                document.getElementById('netStandingVal').className = 'stat-value negative';
-                document.getElementById('activeMembersVal').innerText = '4 Flatmates';
-                debtsContainer.innerHTML = `
-                    <div class="debt-item">
-                        <div class="debt-info">
-                            <span class="debt-names">Dnyaneshwar Sangale owes Tejasvee Patil</span>
-                            <span class="debt-upi">UPI: tejasvee@icici</span>
-                        </div>
-                        <div class="debt-actions">
-                            <span style="font-weight: 700; color: #fff; margin-right: 0.5rem;">₹4,000.00</span>
-                            <button class="btn btn-nudge" onclick="triggerClientNudge(this, 'Tejasvee Patil', '4,000.00')">Nudge 🔔</button>
-                            <button class="btn btn-upi" onclick="triggerClientSettle(this, 'Tejasvee Patil', '4,000.00')">Pay UPI ⚡</button>
-                        </div>
-                    </div>
-                `;
-            } else if (val === '1') {
-                document.getElementById('totalSpendingVal').innerText = '₹14,400.00';
-                document.getElementById('netStandingVal').innerText = '+₹3,600.00';
-                document.getElementById('netStandingVal').className = 'stat-value positive';
-                document.getElementById('activeMembersVal').innerText = '4 Flatmates';
-                debtsContainer.innerHTML = `
-                    <div class="debt-item">
-                        <div class="debt-info">
-                            <span class="debt-names">Bharati Sharma owes Dnyaneshwar Sangale</span>
-                            <span class="debt-upi">UPI: dnyaneshwar@okhdfcbank</span>
-                        </div>
-                        <div class="debt-actions">
-                            <span style="font-weight: 700; color: #fff; margin-right: 0.5rem;">₹3,600.00</span>
-                            <button class="btn btn-nudge" onclick="triggerClientNudge(this, 'Bharati Sharma', '3,600.00')">Nudge 🔔</button>
-                            <button class="btn btn-upi" onclick="triggerClientSettle(this, 'Bharati Sharma', '3,600.00')">Pay UPI ⚡</button>
-                        </div>
-                    </div>
-                    <div class="debt-item">
-                        <div class="debt-info">
-                            <span class="debt-names">Atharva Sawant owes Dnyaneshwar Sangale</span>
-                            <span class="debt-upi">UPI: dnyaneshwar@okhdfcbank</span>
-                        </div>
-                        <div class="debt-actions">
-                            <span style="font-weight: 700; color: #fff; margin-right: 0.5rem;">₹3,600.00</span>
-                            <button class="btn btn-nudge" onclick="triggerClientNudge(this, 'Atharva Sawant', '3,600.00')">Nudge 🔔</button>
-                            <button class="btn btn-upi" onclick="triggerClientSettle(this, 'Atharva Sawant', '3,600.00')">Pay UPI ⚡</button>
-                        </div>
-                    </div>
-                    <div class="debt-item">
-                        <div class="debt-info">
-                            <span class="debt-names">Tejasvee Patil owes Dnyaneshwar Sangale</span>
-                            <span class="debt-upi">UPI: dnyaneshwar@okhdfcbank</span>
-                        </div>
-                        <div class="debt-actions">
-                            <span style="font-weight: 700; color: #fff; margin-right: 0.5rem;">₹1,200.00</span>
-                            <button class="btn btn-nudge" onclick="triggerClientNudge(this, 'Tejasvee Patil', '1,200.00')">Nudge 🔔</button>
-                            <button class="btn btn-upi" onclick="triggerClientSettle(this, 'Tejasvee Patil', '1,200.00')">Pay UPI ⚡</button>
-                        </div>
-                    </div>
-                `;
-            } else {
-                // Custom new group
-                document.getElementById('totalSpendingVal').innerText = '₹0.00';
-                document.getElementById('netStandingVal').innerText = '₹0.00';
-                document.getElementById('netStandingVal').className = 'stat-value';
-
-                let count = 4;
-                if (customObj && customObj.members) {
-                    count = customObj.members.length;
-                } else {
-                    const saved = localStorage.getItem('fundora_custom_groups');
-                    if (saved) {
-                        try {
-                            const list = JSON.parse(saved);
-                            const item = list.find(g => g.id === val);
-                            if (item && item.members) count = item.members.length;
-                        } catch(e) {}
-                    }
-                }
-                document.getElementById('activeMembersVal').innerText = `${count} Members`;
-
-                debtsContainer.innerHTML = `
-                    <div style="text-align: center; padding: 2.5rem 1rem; color: var(--text-muted);">
-                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">🎉</div>
-                        <p style="font-size: 1.05rem; font-weight: 600; color: #fff; margin-bottom: 0.25rem;">New Group Active</p>
-                        <p style="font-size: 0.85rem;">All balances are currently clear (₹0.00). Use the form below to split the first group expense!</p>
-                    </div>
-                `;
-                tbody.innerHTML = `
-                    <tr class="empty-row">
-                        <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">
-                            No expenses recorded yet in this group. Use "Split a New Expense" below!
-                        </td>
-                    </tr>
-                `;
+            const amount = document.getElementById('expAmount').value;
+            try {
+                FundoraDemo.addExpense(activeGroupId, me.id, title, amount, document.getElementById('expCategory').value);
+                render();
+                showToast(`✅ Expense "${title.trim()}" of ₹${inr(amount)} recorded and split equally!`, 'success');
+                e.target.reset();
+            } catch (err) {
+                showToast(err.message, 'error');
             }
         }
+
+        function resetDemo() {
+            if (!confirm('Reset all demo groups, expenses and settlements?')) return;
+            FundoraDemo.reset();
+            window.location.reload();
+        }
+
+        // Initial render: honour ?groupId= when the user belongs to that group
+        (function init() {
+            const groups = FundoraDemo.groupsFor(me.id);
+            const requested = new URLSearchParams(window.location.search).get('groupId');
+            activeGroupId = groups.some(g => g.id === requested) ? requested : groups[0].id;
+            renderGroupSelect();
+            render();
+        })();
+    </script>
+
+    <script type="text/babel">
+        // Module V: React savings tracker for the active group
+        const { useState } = React;
+
+        function ClientSavingsTracker({ groupId }) {
+            const [goals, setGoals] = useState(() => FundoraDemo.goalsFor(groupId));
+            const [contrib, setContrib] = useState({});
+            const [error, setError] = useState('');
+
+            const addFund = (id) => {
+                try {
+                    FundoraDemo.contribute(id, contrib[id]);
+                    setGoals(FundoraDemo.goalsFor(groupId));
+                    setContrib({ ...contrib, [id]: '' });
+                    setError('');
+                } catch (err) {
+                    setError(err.message);
+                }
+            };
+
+            return (
+                <div>
+                    {error && <div className="alert-box alert-danger" role="alert">⚠️ {error}</div>}
+                    {goals.length === 0 && <p style={{ color: '#94a3b8', fontSize: '0.9rem' }}>No savings goals for this group yet.</p>}
+                    {goals.map(g => {
+                        const pct = g.target > 0 ? Math.min(100, Math.round((g.current / g.target) * 100)) : 0;
+                        const done = g.current >= g.target;
+                        return (
+                            <div key={g.id} style={{ background: '#334155', padding: '1.25rem', borderRadius: '10px', marginBottom: '1rem', border: '1px solid #475569' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                                    <strong style={{ color: '#f8fafc', fontSize: '1rem' }}>{g.title}</strong>
+                                    <span style={{ background: done ? '#10b981' : '#06b6d4', color: '#fff', padding: '0.15rem 0.5rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 'bold' }}>{done ? 'COMPLETED' : 'ACTIVE'}</span>
+                                </div>
+                                <div style={{ background: '#1e293b', borderRadius: '9999px', height: '14px', overflow: 'hidden', marginBottom: '0.75rem' }}>
+                                    <div style={{ width: `${pct}%`, background: 'linear-gradient(90deg, #4f46e5, #06b6d4)', height: '100%', transition: 'width 0.4s' }}></div>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: '#94a3b8', marginBottom: '0.75rem' }}>
+                                    <span>Saved: <strong style={{ color: '#10b981' }}>₹{FundoraDemo.formatINR(g.current)}</strong></span>
+                                    <span>Target: ₹{FundoraDemo.formatINR(g.target)} ({pct}%)</span>
+                                </div>
+                                {!done && (
+                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                        <input type="number" min="0.01" step="0.01" placeholder="Contribute ₹" value={contrib[g.id] || ''} onChange={(e) => setContrib({ ...contrib, [g.id]: e.target.value })} style={{ flex: 1, padding: '0.45rem', background: '#0f172a', border: '1px solid #475569', borderRadius: '6px', color: '#fff' }}/>
+                                        <button onClick={() => addFund(g.id)} style={{ background: '#10b981', color: '#fff', border: 'none', borderRadius: '6px', padding: '0.45rem 0.9rem', cursor: 'pointer', fontWeight: 'bold' }}>+ Add</button>
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
+            );
+        }
+
+        const savingsRoot = ReactDOM.createRoot(document.getElementById('staticReactContainer'));
+        window.renderSavings = (groupId) => savingsRoot.render(<ClientSavingsTracker key={groupId} groupId={groupId} />);
+        window.renderSavings(activeGroupId);
     </script>
 </body>
 </html>

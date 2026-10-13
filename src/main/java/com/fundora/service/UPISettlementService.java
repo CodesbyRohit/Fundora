@@ -1,12 +1,12 @@
 package com.fundora.service;
 
 import com.fundora.dto.SettlementRequestDTO;
+import com.fundora.exception.InsufficientBalanceException;
 import com.fundora.exception.LedgerException;
 import com.fundora.exception.UserNotFoundException;
 import com.fundora.model.Group;
 import com.fundora.model.Settlement;
 import com.fundora.model.User;
-import com.fundora.repository.GroupRepository;
 import com.fundora.repository.SettlementRepository;
 import com.fundora.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,10 +31,10 @@ public class UPISettlementService implements PaymentGatewayInterface {
     private SettlementRepository settlementRepository;
 
     @Autowired
-    private GroupRepository groupRepository;
+    private UserRepository userRepository;
 
     @Autowired
-    private UserRepository userRepository;
+    private LedgerService ledgerService;
 
     @Override
     public boolean validateVPA(String upiId) {
@@ -47,38 +47,51 @@ public class UPISettlementService implements PaymentGatewayInterface {
     @Override
     @Transactional
     public Settlement processUPISettlement(Long groupId, User payer, User payee, BigDecimal amount, String upiId) {
-        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new LedgerException("Settlement amount must be greater than zero.");
+        BigDecimal settleAmount = LedgerService.normalizeAmount(amount, "Settlement amount");
+
+        if (payer.getId().equals(payee.getId())) {
+            throw LedgerException.invalid("Payer and payee must be different users.");
         }
 
-        Group group = groupRepository.findById(groupId)
-                .orElseThrow(() -> new LedgerException("Group not found with ID: " + groupId));
+        Group group = ledgerService.requireGroup(groupId);
+        ledgerService.requireMember(group, payer.getId());
+        ledgerService.requireMember(group, payee.getId());
 
-        // Generate synthetic UPI Reference ID (e.g., UPI/2026/894723984)
-        String txnRef = "UPI/FUNDORA/" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+        // The VPA must be well-formed and must belong to the payee (prevents paying a mistyped/foreign UPI ID)
+        String vpa = (upiId == null || upiId.isBlank()) ? payee.getUpiId() : upiId.trim();
+        if (!validateVPA(vpa)) {
+            throw LedgerException.invalid("Invalid UPI ID '" + vpa + "'. Expected format: name@bank");
+        }
+        if (!vpa.equalsIgnoreCase(payee.getUpiId())) {
+            throw LedgerException.invalid("UPI ID " + vpa + " does not belong to " + payee.getName() + ".");
+        }
 
-        Settlement settlement = new Settlement(
-                group,
-                payer,
-                payee,
-                amount,
-                "UPI",
-                txnRef
-        );
-        settlement.setSettlementStatus("COMPLETED");
-        settlement.setSettledAt(LocalDateTime.now());
-
-        // Update in-app wallet balances
-        payer.debitWallet(amount);
-        payee.creditWallet(amount);
+        // Update in-app wallet balances. Previously a failed debit was ignored while the payee was
+        // still credited, which created money out of thin air.
+        if (!payer.debitWallet(settleAmount)) {
+            throw new InsufficientBalanceException(String.format(
+                    "%s's wallet balance (₹%s) is not enough to settle ₹%s.",
+                    payer.getName(), payer.getWalletBalance().toPlainString(), settleAmount.toPlainString()));
+        }
+        payee.creditWallet(settleAmount);
         userRepository.save(payer);
         userRepository.save(payee);
+
+        // Generate synthetic UPI Reference ID (e.g., UPI/FUNDORA/1A2B3C4D)
+        String txnRef = "UPI/FUNDORA/" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+
+        Settlement settlement = new Settlement(group, payer, payee, settleAmount, "UPI", txnRef);
+        settlement.setSettlementStatus("COMPLETED");
+        settlement.setSettledAt(LocalDateTime.now());
 
         return settlementRepository.save(settlement);
     }
 
     @Transactional
     public Settlement recordSettlement(SettlementRequestDTO dto) {
+        if (dto.getPayerUserId() == null || dto.getPayeeUserId() == null) {
+            throw LedgerException.invalid("payerUserId and payeeUserId are required.");
+        }
         User payer = userRepository.findById(dto.getPayerUserId())
                 .orElseThrow(() -> new UserNotFoundException(dto.getPayerUserId()));
         User payee = userRepository.findById(dto.getPayeeUserId())

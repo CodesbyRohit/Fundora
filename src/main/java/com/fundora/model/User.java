@@ -151,12 +151,18 @@ public class User {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         User user = (User) o;
-        return Objects.equals(id, user.id) || Objects.equals(email, user.email);
+        // Persisted users compare by primary key; transient ones fall back to their unique email.
+        // (The previous "id OR email" check made any two unsaved users equal and broke the hashCode contract.)
+        if (id != null && user.id != null) {
+            return id.equals(user.id);
+        }
+        return email != null && email.equals(user.email);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, email);
+        // Email is unique and immutable in practice, so it stays stable before and after persisting.
+        return Objects.hashCode(email);
     }
 
     @Override

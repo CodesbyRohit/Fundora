@@ -1,6 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+<fmt:setLocale value="en_IN"/>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -62,22 +63,6 @@
         .role-badge.manager {
             background: #f59e0b;
         }
-        .alert-box {
-            padding: 0.85rem 1rem;
-            border-radius: 8px;
-            margin-bottom: 1.25rem;
-            font-size: 0.9rem;
-        }
-        .alert-danger {
-            background: rgba(239, 68, 68, 0.15);
-            border: 1px solid var(--danger);
-            color: #fca5a5;
-        }
-        .alert-success {
-            background: rgba(16, 185, 129, 0.15);
-            border: 1px solid var(--accent);
-            color: #6ee7b7;
-        }
     </style>
 </head>
 <body>
@@ -138,7 +123,7 @@
                 <div class="card-header">
                     <h2 class="card-title">🔐 Sign In with ID / Phone</h2>
                 </div>
-                <form action="${pageContext.request.contextPath}/login" method="POST">
+                <form action="${pageContext.request.contextPath}/login" method="POST" accept-charset="UTF-8">
                     <div class="form-group">
                         <label class="form-label">Email Address or Registered Phone</label>
                         <input type="text" name="emailOrPhone" class="form-control" placeholder="e.g. dnyaneshwar@fundora.app or 9820112233" required/>

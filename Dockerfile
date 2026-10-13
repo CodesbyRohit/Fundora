@@ -13,6 +13,7 @@ RUN mvn clean package -DskipTests
 # Run Stage
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
-COPY --from=build /app/target/fundora-fintech-1.0.0-SNAPSHOT.jar app.jar
+# Executable WAR (JSP views are only resolvable from a WAR, not a plain JAR)
+COPY --from=build /app/target/fundora-fintech.war app.war
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-jar", "app.war"]

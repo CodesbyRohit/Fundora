@@ -24,8 +24,8 @@ function scanAndHighlightLedgerDOM() {
         NodeFilter.SHOW_ELEMENT,
         {
             acceptNode: function(node) {
-                return node.classList && node.classList.contains('amount-cell') 
-                    ? NodeFilter.FILTER_ACCEPT 
+                return node.classList && node.classList.contains('amount-cell')
+                    ? NodeFilter.FILTER_ACCEPT
                     : NodeFilter.FILTER_SKIP;
             }
         }
@@ -42,13 +42,32 @@ function scanAndHighlightLedgerDOM() {
 }
 
 /**
+ * Formats a rupee amount the Indian way (e.g. 12,000.00)
+ */
+function formatINR(amount) {
+    return Number(amount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+/**
+ * Reads the {code, message} error body returned by the REST API, falling back to a generic message
+ */
+async function readApiError(response, fallback) {
+    try {
+        const body = await response.json();
+        if (body && body.message) return body.message;
+    } catch (_) { /* non-JSON error body */ }
+    return fallback;
+}
+
+/**
  * Module IV & VI: Smart Reminder Nudge Handler (Non-intrusive alert triggering)
+ * The sender is the signed-in user (taken from the server-side session).
  */
 function initNudgeButtons() {
     const nudgeButtons = document.querySelectorAll('.btn-smart-nudge');
     nudgeButtons.forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-            const senderId = btn.getAttribute('data-sender-id');
+        const originalLabel = btn.innerText;
+        btn.addEventListener('click', async () => {
             const receiverId = btn.getAttribute('data-receiver-id');
             const receiverName = btn.getAttribute('data-receiver-name');
             const groupId = btn.getAttribute('data-group-id');
@@ -60,33 +79,29 @@ function initNudgeButtons() {
             try {
                 const response = await fetch('/api/nudge', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Fundora-User-Id': senderId
-                    },
+                    credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        senderUserId: parseInt(senderId),
-                        receiverUserId: parseInt(receiverId),
-                        groupId: parseInt(groupId),
-                        amount: parseFloat(amount)
+                        receiverUserId: parseInt(receiverId, 10),
+                        groupId: parseInt(groupId, 10),
+                        amount: amount
                     })
                 });
 
                 if (response.ok) {
-                    const data = await response.json();
                     showToast(`✨ Smart Nudge sent to ${receiverName}!`, 'success');
                     btn.innerText = 'Nudged ✔';
                     btn.classList.add('btn-accent');
                 } else {
-                    showToast('Failed to send nudge. Please retry.', 'error');
+                    showToast(await readApiError(response, 'Failed to send nudge. Please retry.'), 'error');
                     btn.disabled = false;
-                    btn.innerText = 'Smart Nudge 🔔';
+                    btn.innerText = originalLabel;
                 }
             } catch (err) {
                 console.error("Nudge error:", err);
                 showToast('Network error while nudging.', 'error');
                 btn.disabled = false;
-                btn.innerText = 'Smart Nudge 🔔';
+                btn.innerText = originalLabel;
             }
         });
     });
@@ -94,19 +109,20 @@ function initNudgeButtons() {
 
 /**
  * Module IV & VI: Direct UPI Settlement Execution & Auto-Balancing
+ * The payer is the signed-in user (taken from the server-side session).
  */
 function initSettlementButtons() {
     const settleButtons = document.querySelectorAll('.btn-upi-settle');
     settleButtons.forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-            const payerId = btn.getAttribute('data-payer-id');
+        const originalLabel = btn.innerText;
+        btn.addEventListener('click', async () => {
             const payeeId = btn.getAttribute('data-payee-id');
             const payeeName = btn.getAttribute('data-payee-name');
             const upiId = btn.getAttribute('data-upi-id');
             const groupId = btn.getAttribute('data-group-id');
             const amount = btn.getAttribute('data-amount');
 
-            if (!confirm(`Confirm UPI settlement of ₹${amount} to ${payeeName} (${upiId})?`)) {
+            if (!confirm(`Confirm UPI settlement of ₹${formatINR(amount)} to ${payeeName} (${upiId})?`)) {
                 return;
             }
 
@@ -116,15 +132,12 @@ function initSettlementButtons() {
             try {
                 const response = await fetch('/api/settle/upi', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Fundora-User-Id': payerId
-                    },
+                    credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        groupId: parseInt(groupId),
-                        payerUserId: parseInt(payerId),
-                        payeeUserId: parseInt(payeeId),
-                        amount: parseFloat(amount),
+                        groupId: parseInt(groupId, 10),
+                        payeeUserId: parseInt(payeeId, 10),
+                        amount: amount,
                         upiId: upiId,
                         paymentMode: 'UPI'
                     })
@@ -132,20 +145,20 @@ function initSettlementButtons() {
 
                 if (response.ok) {
                     const data = await response.json();
-                    showToast(`🎉 Settled ₹${amount} via UPI to ${payeeName}! Ref: ${data.transactionReference}`, 'success');
+                    showToast(`🎉 Settled ₹${formatINR(amount)} via UPI to ${payeeName}! Ref: ${data.transactionReference}`, 'success');
                     setTimeout(() => {
                         window.location.reload();
                     }, 1500);
                 } else {
-                    showToast('UPI settlement error. Please verify balance.', 'error');
+                    showToast(await readApiError(response, 'UPI settlement failed. Please verify your balance.'), 'error');
                     btn.disabled = false;
-                    btn.innerText = 'Pay via UPI ⚡';
+                    btn.innerText = originalLabel;
                 }
             } catch (err) {
                 console.error("UPI error:", err);
                 showToast('Network error during settlement.', 'error');
                 btn.disabled = false;
-                btn.innerText = 'Pay via UPI ⚡';
+                btn.innerText = originalLabel;
             }
         });
     });
@@ -153,6 +166,7 @@ function initSettlementButtons() {
 
 /**
  * Module IV: Toast Notification Component dynamically injected into DOM
+ * Uses textContent (never innerHTML) so user-supplied names cannot inject markup.
  */
 function showToast(message, type = 'info') {
     let container = document.getElementById('toastContainer');
@@ -160,12 +174,16 @@ function showToast(message, type = 'info') {
         container = document.createElement('div');
         container.id = 'toastContainer';
         container.className = 'toast-container';
+        container.setAttribute('role', 'status');
+        container.setAttribute('aria-live', 'polite');
         document.body.appendChild(container);
     }
 
     const toast = document.createElement('div');
-    toast.className = 'toast';
-    toast.innerHTML = `<span>${message}</span>`;
+    toast.className = `toast toast-${type}`;
+    const text = document.createElement('span');
+    text.textContent = message;
+    toast.appendChild(text);
     container.appendChild(toast);
 
     setTimeout(() => {

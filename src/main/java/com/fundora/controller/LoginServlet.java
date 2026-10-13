@@ -1,5 +1,6 @@
 package com.fundora.controller;
 
+import com.fundora.config.AuthFilter;
 import com.fundora.model.User;
 import com.fundora.repository.UserRepository;
 import jakarta.servlet.ServletException;
@@ -56,7 +57,8 @@ public class LoginServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
-        
+
+        request.setCharacterEncoding("UTF-8");
         String quickUserId = request.getParameter("quickUserId");
         String emailOrPhone = request.getParameter("emailOrPhone");
 
@@ -64,8 +66,11 @@ public class LoginServlet extends HttpServlet {
 
         if (quickUserId != null && !quickUserId.trim().isEmpty()) {
             // Quick-switch 1-click persona login
-            Long userId = Long.parseLong(quickUserId);
-            selectedUser = userRepository.findById(userId).orElse(null);
+            try {
+                selectedUser = userRepository.findById(Long.valueOf(quickUserId.trim())).orElse(null);
+            } catch (NumberFormatException e) {
+                selectedUser = null;
+            }
         } else if (emailOrPhone != null && !emailOrPhone.trim().isEmpty()) {
             // Standard form lookup by email or phone
             Optional<User> byEmail = userRepository.findByEmail(emailOrPhone.trim().toLowerCase());
@@ -80,10 +85,10 @@ public class LoginServlet extends HttpServlet {
         }
 
         if (selectedUser != null) {
-            // Create authenticated session
+            // Create authenticated session; rotate the session id to prevent session fixation
             HttpSession session = request.getSession(true);
-            session.setAttribute("currentUserId", selectedUser.getId());
-            session.setAttribute("currentUser", selectedUser);
+            request.changeSessionId();
+            session.setAttribute(AuthFilter.SESSION_USER_ID, selectedUser.getId());
             session.setAttribute("userName", selectedUser.getName());
             session.setAttribute("userRole", selectedUser.getRole());
             

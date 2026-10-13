@@ -1,6 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+<fmt:setLocale value="en_IN"/>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -17,7 +18,7 @@
             <span class="brand-badge">Audit Ledger</span>
         </a>
         <div style="display: flex; gap: 0.75rem;">
-            <a href="${pageContext.request.contextPath}/dashboard?groupId=${not empty selectedGroupId ? selectedGroupId : (not empty ledger.group.id ? ledger.group.id : 1)}" class="btn btn-primary">
+            <a href="${pageContext.request.contextPath}/dashboard${not empty selectedGroupId ? '?groupId=' += selectedGroupId : ''}" class="btn btn-primary">
                 ⬅️ Back to Dashboard
             </a>
             <a href="${pageContext.request.contextPath}/logout" class="btn btn-nudge" style="text-decoration: none;">
@@ -27,6 +28,16 @@
     </header>
 
     <div class="container">
+        <c:if test="${not empty flashError}">
+            <div class="alert-box alert-danger">⚠️ <c:out value="${flashError}"/></div>
+        </c:if>
+        <c:if test="${empty ledger}">
+            <div class="card" style="text-align: center; padding: 3rem 1.5rem;">
+                <h2 class="card-title">No group ledger to show</h2>
+                <p style="color: var(--text-muted);">You are not a member of any group yet.</p>
+            </div>
+        </c:if>
+        <c:if test="${not empty ledger}">
         <div class="card">
             <div class="card-header">
                 <div>
@@ -105,6 +116,7 @@
                 </tbody>
             </table>
         </div>
+        </c:if>
     </div>
 
 </body>
