@@ -10,10 +10,14 @@ import java.io.IOException;
 /**
  * Module III (Servlets & Filter API):
  * AuthFilter intercepts incoming HTTP requests, manages session state,
- * and ensures user authentication before accessing ledger & expense routes.
+ * and ensures user authentication before accessing ledger, expense and
+ * state-changing REST routes (settlements, nudges, new expenses).
  */
-@WebFilter(urlPatterns = {"/expenses/*", "/ledger/*", "/dashboard/*", "/api/settle/*"})
+@WebFilter(urlPatterns = {"/expenses/*", "/ledger/*", "/dashboard/*", "/api/settle/*", "/api/nudge", "/api/expenses/*"})
 public class AuthFilter implements Filter {
+
+    public static final String SESSION_USER_ID = "currentUserId";
+    public static final String USER_ID_HEADER = "X-Fundora-User-Id";
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
@@ -23,44 +27,48 @@ public class AuthFilter implements Filter {
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
-        
+
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;
 
         // Retrieve existing session without creating a new one
         HttpSession session = httpRequest.getSession(false);
-        String requestURI = httpRequest.getRequestURI();
+        Long loggedInUserId = (session != null) ? (Long) session.getAttribute(SESSION_USER_ID) : null;
 
-        // Allow public static resources, login, index, and general API lookups
-        boolean isStatic = requestURI.contains("/static/") || requestURI.contains("/css/") || requestURI.contains("/js/");
-        boolean isLoginOrPublic = requestURI.endsWith("/login") || requestURI.endsWith("/logout") || requestURI.equals("/") || requestURI.endsWith("index.jsp");
-
-        if (isStatic || isLoginOrPublic) {
-            chain.doFilter(request, response);
-            return;
+        // Header-based identity is a convenience for REST API testing (curl/Postman) only
+        if (loggedInUserId == null) {
+            Long headerUserId = parseUserId(httpRequest.getHeader(USER_ID_HEADER));
+            if (headerUserId != null) {
+                httpRequest.getSession(true).setAttribute(SESSION_USER_ID, headerUserId);
+                loggedInUserId = headerUserId;
+            }
         }
 
-        // Check active session or mock logged-in user header for REST API testing
-        Long loggedInUserId = (session != null) ? (Long) session.getAttribute("currentUserId") : null;
-        String authHeader = httpRequest.getHeader("X-Fundora-User-Id");
-
-        if (loggedInUserId != null || authHeader != null) {
-            // If header exists and session is null, initialize session attribute
-            if (loggedInUserId == null && authHeader != null) {
-                HttpSession newSession = httpRequest.getSession(true);
-                newSession.setAttribute("currentUserId", Long.parseLong(authHeader));
-            }
+        if (loggedInUserId != null) {
             chain.doFilter(request, response);
+        } else if (isApiRequest(httpRequest)) {
+            httpResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            httpResponse.setContentType("application/json;charset=UTF-8");
+            httpResponse.getWriter().write(
+                "{\"code\":\"UNAUTHORIZED\",\"message\":\"Please sign in (or send the " + USER_ID_HEADER + " header) to use this endpoint.\"}");
         } else {
             // Redirect unauthenticated web browser requests to /login
-            if (requestURI.startsWith("/api/")) {
-                // For API requests without auth, fallback to user 1 for smooth testing
-                HttpSession autoSession = httpRequest.getSession(true);
-                autoSession.setAttribute("currentUserId", 1L);
-                chain.doFilter(request, response);
-            } else {
-                httpResponse.sendRedirect(httpRequest.getContextPath() + "/login");
-            }
+            httpResponse.sendRedirect(httpRequest.getContextPath() + "/login");
+        }
+    }
+
+    private boolean isApiRequest(HttpServletRequest request) {
+        return request.getRequestURI().startsWith(request.getContextPath() + "/api/");
+    }
+
+    private Long parseUserId(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        try {
+            return Long.valueOf(raw.trim());
+        } catch (NumberFormatException e) {
+            return null;
         }
     }
 

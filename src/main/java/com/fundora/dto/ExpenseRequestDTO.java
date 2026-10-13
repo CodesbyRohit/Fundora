@@ -17,6 +17,7 @@ public class ExpenseRequestDTO {
     private SplitType splitType = SplitType.EQUAL;
     private List<Long> participantUserIds;
     private Map<Long, BigDecimal> exactSplits;
+    private Map<Long, BigDecimal> percentageSplits;
 
     public ExpenseRequestDTO() {}
 
@@ -82,5 +83,13 @@ public class ExpenseRequestDTO {
 
     public void setExactSplits(Map<Long, BigDecimal> exactSplits) {
         this.exactSplits = exactSplits;
+    }
+
+    public Map<Long, BigDecimal> getPercentageSplits() {
+        return percentageSplits;
+    }
+
+    public void setPercentageSplits(Map<Long, BigDecimal> percentageSplits) {
+        this.percentageSplits = percentageSplits;
     }
 }

@@ -20,18 +20,17 @@ import java.util.stream.Collectors;
 /**
  * Module I, II & VI: Core Fundora Shared Ledger & Expense Splitting Engine
  * Features:
- * 1. Equal / Exact expense calculations
+ * 1. Equal / Exact / Percentage expense calculations
  * 2. Min-Cash-Flow Greedy Debt Simplification Algorithm ("Who Owes Whom")
  * 3. Real-time net debt balance computation
  */
 @Service
 public class LedgerService {
 
-    @Autowired
-    private ExpenseRepository expenseRepository;
+    private static final BigDecimal MAX_AMOUNT = new BigDecimal("9999999999.99"); // DECIMAL(12, 2)
 
     @Autowired
-    private ExpenseSplitRepository expenseSplitRepository;
+    private ExpenseRepository expenseRepository;
 
     @Autowired
     private GroupRepository groupRepository;
@@ -53,47 +52,126 @@ public class LedgerService {
     @Qualifier("exactExpenseSplitter")
     private ExpenseSplitter exactExpenseSplitter;
 
+    @Autowired
+    @Qualifier("percentageExpenseSplitter")
+    private ExpenseSplitter percentageExpenseSplitter;
+
     /**
      * Records a new expense and computes individual splits
      */
     @Transactional
     public Expense addExpense(ExpenseRequestDTO dto) {
-        Group group = groupRepository.findById(dto.getGroupId())
-                .orElseThrow(() -> new LedgerException("Group with ID " + dto.getGroupId() + " not found."));
+        if (dto.getGroupId() == null) {
+            throw LedgerException.invalid("groupId is required.");
+        }
+        if (dto.getPaidByUserId() == null) {
+            throw LedgerException.invalid("paidByUserId is required.");
+        }
+        if (dto.getTitle() == null || dto.getTitle().isBlank()) {
+            throw LedgerException.invalid("Expense title is required.");
+        }
+        BigDecimal amount = normalizeAmount(dto.getAmount(), "Expense amount");
 
+        Group group = requireGroup(dto.getGroupId());
         User paidBy = userRepository.findById(dto.getPaidByUserId())
                 .orElseThrow(() -> new UserNotFoundException(dto.getPaidByUserId()));
+        requireMember(group, paidBy.getId());
 
-        Expense expense = new Expense(
-                group,
-                paidBy,
-                dto.getTitle(),
-                dto.getAmount(),
-                dto.getCategory(),
-                dto.getSplitType() != null ? dto.getSplitType() : SplitType.EQUAL
-        );
+        SplitType splitType = dto.getSplitType() != null ? dto.getSplitType() : SplitType.EQUAL;
+        String category = (dto.getCategory() == null || dto.getCategory().isBlank())
+                ? "GENERAL" : dto.getCategory().trim().toUpperCase(Locale.ROOT);
 
-        // Determine participants (default to all group members if not specified)
+        Expense expense = new Expense(group, paidBy, dto.getTitle().trim(), amount, category, splitType);
+
+        Map<Long, BigDecimal> splitData = switch (splitType) {
+            case EXACT -> dto.getExactSplits();
+            case PERCENTAGE -> dto.getPercentageSplits();
+            default -> null;
+        };
+
+        // Determine participants: explicit list, else the users named in the split data, else all group members
         List<User> participants;
         if (dto.getParticipantUserIds() != null && !dto.getParticipantUserIds().isEmpty()) {
-            participants = userRepository.findAllById(dto.getParticipantUserIds());
+            participants = resolveMembers(group, dto.getParticipantUserIds());
+        } else if (splitData != null && !splitData.isEmpty()) {
+            participants = resolveMembers(group, splitData.keySet());
         } else {
             participants = new ArrayList<>(group.getMembers());
         }
 
         if (participants.isEmpty()) {
-            throw new LedgerException("Expense must have at least one participant.");
+            throw LedgerException.invalid("Expense must have at least one participant.");
         }
+        participants.sort(Comparator.comparing(User::getId));
 
         // Module II: Strategy Pattern Selection for Splitting Logic
-        ExpenseSplitter splitter = (dto.getSplitType() == SplitType.EXACT) 
-                ? exactExpenseSplitter 
-                : equalExpenseSplitter;
+        ExpenseSplitter splitter = switch (splitType) {
+            case EXACT -> exactExpenseSplitter;
+            case PERCENTAGE -> percentageExpenseSplitter;
+            default -> equalExpenseSplitter;
+        };
 
-        List<ExpenseSplit> splits = splitter.calculateSplits(expense, participants, dto.getExactSplits());
+        List<ExpenseSplit> splits = splitter.calculateSplits(expense, participants, splitData);
         expense.setSplits(splits);
 
         return expenseRepository.save(expense);
+    }
+
+    /**
+     * Creates a group; the creator is always a member, and members default to every user when none are chosen.
+     */
+    @Transactional
+    public Group createGroup(String name, String description, GroupType groupType, Long creatorId, Collection<Long> memberIds) {
+        if (name == null || name.isBlank()) {
+            throw LedgerException.invalid("Group name is required.");
+        }
+        if (name.trim().length() > 120) {
+            throw LedgerException.invalid("Group name must be at most 120 characters.");
+        }
+        if (description != null && description.trim().length() > 255) {
+            throw LedgerException.invalid("Group description must be at most 255 characters.");
+        }
+        if (creatorId == null) {
+            throw LedgerException.invalid("Group creator is required.");
+        }
+        User creator = userRepository.findById(creatorId)
+                .orElseThrow(() -> new UserNotFoundException(creatorId));
+
+        String desc = (description == null || description.isBlank()) ? null : description.trim();
+        Group group = new Group(name.trim(), desc, groupType != null ? groupType : GroupType.FLATMATE_RECURRING, creator);
+
+        List<User> members = (memberIds == null || memberIds.isEmpty())
+                ? userRepository.findAll()
+                : userRepository.findAllById(memberIds);
+        if (memberIds != null && members.size() != new HashSet<>(memberIds).size()) {
+            throw LedgerException.notFound("One or more selected members do not exist.");
+        }
+        members.forEach(group::addMember);
+
+        return groupRepository.save(group);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Group> getGroupsForUser(Long userId) {
+        List<Group> groups = new ArrayList<>(groupRepository.findGroupsByUserId(userId));
+        groups.sort(Comparator.comparing(Group::getId));
+        return groups;
+    }
+
+    @Transactional(readOnly = true)
+    public Group requireGroup(Long groupId) {
+        if (groupId == null) {
+            throw LedgerException.invalid("groupId is required.");
+        }
+        return groupRepository.findById(groupId)
+                .orElseThrow(() -> LedgerException.notFound("Group with ID " + groupId + " not found."));
+    }
+
+    public void requireMember(Group group, Long userId) {
+        boolean member = group.getMembers().stream().anyMatch(u -> u.getId().equals(userId));
+        if (!member) {
+            throw LedgerException.invalid("User " + userId + " is not a member of group '" + group.getName() + "'.");
+        }
     }
 
     /**
@@ -101,8 +179,7 @@ public class LedgerService {
      */
     @Transactional(readOnly = true)
     public LedgerSummaryDTO getGroupLedger(Long groupId) {
-        Group group = groupRepository.findById(groupId)
-                .orElseThrow(() -> new LedgerException("Group with ID " + groupId + " not found."));
+        Group group = requireGroup(groupId);
 
         List<Expense> expenses = expenseRepository.findByGroupIdOrderByExpenseDateDesc(groupId);
         List<Settlement> settlements = settlementRepository.findByGroupIdOrderBySettledAtDesc(groupId);
@@ -133,13 +210,19 @@ public class LedgerService {
     private List<DebtRelationDTO> simplifyDebts(Map<Long, BigDecimal> netBalances, Group group) {
         List<DebtRelationDTO> debtList = new ArrayList<>();
         Map<Long, User> userMap = group.getMembers().stream()
-                .collect(Collectors.toMap(User::getId, u -> u));
+                .collect(Collectors.toMap(User::getId, u -> u, (a, b) -> a, HashMap::new));
+        // Users who left the group may still carry a balance; load them too so their debts are not dropped
+        Set<Long> missing = new HashSet<>(netBalances.keySet());
+        missing.removeAll(userMap.keySet());
+        if (!missing.isEmpty()) {
+            userRepository.findAllById(missing).forEach(u -> userMap.put(u.getId(), u));
+        }
 
         // Priority Queues for Debtors (negative balance) and Creditors (positive balance)
         // Debtor balance stored as positive amount owed for easy comparison
         class BalanceNode {
-            Long userId;
-            BigDecimal amount;
+            final Long userId;
+            final BigDecimal amount;
 
             BalanceNode(Long userId, BigDecimal amount) {
                 this.userId = userId;
@@ -147,14 +230,18 @@ public class LedgerService {
             }
         }
 
-        PriorityQueue<BalanceNode> debtors = new PriorityQueue<>((a, b) -> b.amount.compareTo(a.amount));
-        PriorityQueue<BalanceNode> creditors = new PriorityQueue<>((a, b) -> b.amount.compareTo(a.amount));
+        // Ties broken by user id so the suggested settlements are deterministic
+        Comparator<BalanceNode> largestFirst = Comparator.comparing((BalanceNode n) -> n.amount).reversed()
+                .thenComparing(n -> n.userId);
+        PriorityQueue<BalanceNode> debtors = new PriorityQueue<>(largestFirst);
+        PriorityQueue<BalanceNode> creditors = new PriorityQueue<>(largestFirst);
 
+        BigDecimal paisa = new BigDecimal("0.01");
         for (Map.Entry<Long, BigDecimal> entry : netBalances.entrySet()) {
             BigDecimal balance = entry.getValue().setScale(2, RoundingMode.HALF_UP);
-            if (balance.compareTo(new BigDecimal("0.01")) >= 0) {
+            if (balance.compareTo(paisa) >= 0) {
                 creditors.offer(new BalanceNode(entry.getKey(), balance));
-            } else if (balance.compareTo(new BigDecimal("-0.01")) <= 0) {
+            } else if (balance.compareTo(paisa.negate()) <= 0) {
                 debtors.offer(new BalanceNode(entry.getKey(), balance.abs()));
             }
         }
@@ -182,14 +269,47 @@ public class LedgerService {
             BigDecimal remainingDebtor = debtor.amount.subtract(settlementAmount);
             BigDecimal remainingCreditor = creditor.amount.subtract(settlementAmount);
 
-            if (remainingDebtor.compareTo(new BigDecimal("0.01")) >= 0) {
+            if (remainingDebtor.compareTo(paisa) >= 0) {
                 debtors.offer(new BalanceNode(debtor.userId, remainingDebtor));
             }
-            if (remainingCreditor.compareTo(new BigDecimal("0.01")) >= 0) {
+            if (remainingCreditor.compareTo(paisa) >= 0) {
                 creditors.offer(new BalanceNode(creditor.userId, remainingCreditor));
             }
         }
 
         return debtList;
+    }
+
+    /**
+     * Validates a money amount: positive, at most 2 decimal places, fits DECIMAL(12, 2).
+     */
+    public static BigDecimal normalizeAmount(BigDecimal amount, String label) {
+        if (amount == null) {
+            throw LedgerException.invalid(label + " is required.");
+        }
+        if (amount.signum() <= 0) {
+            throw LedgerException.invalid(label + " must be greater than zero.");
+        }
+        if (amount.stripTrailingZeros().scale() > 2) {
+            throw LedgerException.invalid(label + " can have at most 2 decimal places (paise).");
+        }
+        if (amount.compareTo(MAX_AMOUNT) > 0) {
+            throw LedgerException.invalid(label + " is too large.");
+        }
+        return amount.setScale(2, RoundingMode.UNNECESSARY);
+    }
+
+    private List<User> resolveMembers(Group group, Collection<Long> userIds) {
+        Map<Long, User> members = group.getMembers().stream()
+                .collect(Collectors.toMap(User::getId, u -> u));
+        List<User> result = new ArrayList<>();
+        for (Long id : new LinkedHashSet<>(userIds)) {
+            User u = members.get(id);
+            if (u == null) {
+                throw LedgerException.invalid("User " + id + " is not a member of group '" + group.getName() + "'.");
+            }
+            result.add(u);
+        }
+        return result;
     }
 }

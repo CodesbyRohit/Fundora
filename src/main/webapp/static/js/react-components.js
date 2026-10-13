@@ -11,20 +11,36 @@ function SavingsTracker({ initialGroupId }) {
     const [contributionAmounts, setContributionAmounts] = useState({});
     const [newGoalTitle, setNewGoalTitle] = useState('');
     const [newGoalTarget, setNewGoalTarget] = useState('');
+    const [error, setError] = useState('');
+    const [busy, setBusy] = useState(false);
 
     useEffect(() => {
         fetchGoals();
     }, [initialGroupId]);
 
-    const fetchGoals = async () => {
+    // Surfaces the {code, message} body returned by the REST API
+    const readError = async (res, fallback) => {
         try {
-            const res = await fetch(`/api/groups/${initialGroupId || 1}/savings`);
+            const body = await res.json();
+            return (body && body.message) || fallback;
+        } catch (_) {
+            return fallback;
+        }
+    };
+
+    const fetchGoals = async () => {
+        setLoading(true);
+        try {
+            const res = await fetch(`/api/groups/${initialGroupId}/savings`);
             if (res.ok) {
-                const data = await res.json();
-                setGoals(data);
+                setGoals(await res.json());
+                setError('');
+            } else {
+                setError(await readError(res, 'Could not load savings goals.'));
             }
         } catch (err) {
             console.error("Failed to load savings goals:", err);
+            setError('Network error while loading savings goals.');
         } finally {
             setLoading(false);
         }
@@ -32,38 +48,48 @@ function SavingsTracker({ initialGroupId }) {
 
     const handleContribute = async (goalId) => {
         const amount = contributionAmounts[goalId];
-        if (!amount || parseFloat(amount) <= 0) {
-            alert("Please enter a valid contribution amount.");
+        if (!amount || !(parseFloat(amount) > 0)) {
+            setError("Please enter a valid contribution amount.");
             return;
         }
 
+        setBusy(true);
         try {
             const res = await fetch(`/api/savings/${goalId}/contribute`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ amount: parseFloat(amount) })
+                body: JSON.stringify({ amount: amount })
             });
 
             if (res.ok) {
                 setContributionAmounts(prev => ({ ...prev, [goalId]: '' }));
-                fetchGoals();
+                await fetchGoals();
+            } else {
+                setError(await readError(res, 'Contribution failed.'));
             }
         } catch (err) {
             console.error("Contribution error:", err);
+            setError('Network error while contributing.');
+        } finally {
+            setBusy(false);
         }
     };
 
     const handleCreateGoal = async (e) => {
         e.preventDefault();
-        if (!newGoalTitle || !newGoalTarget) return;
+        if (!newGoalTitle.trim() || !(parseFloat(newGoalTarget) > 0)) {
+            setError('Enter a goal title and a target amount greater than zero.');
+            return;
+        }
 
+        setBusy(true);
         try {
-            const res = await fetch(`/api/groups/${initialGroupId || 1}/savings`, {
+            const res = await fetch(`/api/groups/${initialGroupId}/savings`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    title: newGoalTitle,
-                    targetAmount: parseFloat(newGoalTarget),
+                    title: newGoalTitle.trim(),
+                    targetAmount: newGoalTarget,
                     deadline: new Date(Date.now() + 60*24*60*60*1000).toISOString().split('T')[0]
                 })
             });
@@ -71,21 +97,41 @@ function SavingsTracker({ initialGroupId }) {
             if (res.ok) {
                 setNewGoalTitle('');
                 setNewGoalTarget('');
-                fetchGoals();
+                await fetchGoals();
+            } else {
+                setError(await readError(res, 'Could not create the goal.'));
             }
         } catch (err) {
             console.error("Create goal error:", err);
+            setError('Network error while creating the goal.');
+        } finally {
+            setBusy(false);
         }
     };
 
-    if (loading) {
+    if (loading && goals.length === 0) {
         return <div style={{ color: '#94a3b8' }}>Loading collaborative savings goals...</div>;
     }
 
+    const formatINR = (n) => Number(n).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+
     return (
         <div>
+            {error && (
+                <div className="alert-box alert-danger" role="alert" style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>⚠️ {error}</span>
+                    <button onClick={() => setError('')} aria-label="Dismiss" style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer' }}>×</button>
+                </div>
+            )}
+
+            {goals.length === 0 && (
+                <p style={{ color: '#94a3b8', fontSize: '0.9rem' }}>No savings goals for this group yet.</p>
+            )}
+
             {goals.map(goal => {
-                const pct = Math.min(100, Math.round((goal.currentAmount / goal.targetAmount) * 100));
+                const pct = goal.targetAmount > 0
+                    ? Math.min(100, Math.round((goal.currentAmount / goal.targetAmount) * 100))
+                    : 0;
                 return (
                     <div key={goal.id} style={{
                         background: '#334155',
@@ -125,14 +171,16 @@ function SavingsTracker({ initialGroupId }) {
                         </div>
 
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: '#94a3b8', marginBottom: '0.75rem' }}>
-                            <span>Saved: <strong style={{ color: '#10b981' }}>₹{goal.currentAmount.toLocaleString()}</strong></span>
-                            <span>Target: ₹{goal.targetAmount.toLocaleString()} ({pct}%)</span>
+                            <span>Saved: <strong style={{ color: '#10b981' }}>₹{formatINR(goal.currentAmount)}</strong></span>
+                            <span>Target: ₹{formatINR(goal.targetAmount)} ({pct}%)</span>
                         </div>
 
                         {goal.status === 'ACTIVE' && (
                             <div style={{ display: 'flex', gap: '0.5rem' }}>
                                 <input
                                     type="number"
+                                    min="0.01"
+                                    step="0.01"
                                     placeholder="Contribute ₹"
                                     value={contributionAmounts[goal.id] || ''}
                                     onChange={(e) => setContributionAmounts({ ...contributionAmounts, [goal.id]: e.target.value })}
@@ -147,6 +195,7 @@ function SavingsTracker({ initialGroupId }) {
                                 />
                                 <button
                                     onClick={() => handleContribute(goal.id)}
+                                    disabled={busy}
                                     style={{
                                         background: '#10b981',
                                         color: '#fff',
@@ -172,6 +221,7 @@ function SavingsTracker({ initialGroupId }) {
                     <input
                         type="text"
                         placeholder="Goal title (e.g. Goa Scuba Diving / Smart TV)"
+                        maxLength={150}
                         value={newGoalTitle}
                         onChange={(e) => setNewGoalTitle(e.target.value)}
                         required
@@ -186,6 +236,8 @@ function SavingsTracker({ initialGroupId }) {
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
                         <input
                             type="number"
+                            min="0.01"
+                            step="0.01"
                             placeholder="Target ₹ (e.g. 15000)"
                             value={newGoalTarget}
                             onChange={(e) => setNewGoalTarget(e.target.value)}
@@ -201,6 +253,7 @@ function SavingsTracker({ initialGroupId }) {
                         />
                         <button
                             type="submit"
+                            disabled={busy}
                             style={{
                                 background: '#4f46e5',
                                 color: '#fff',
@@ -223,6 +276,6 @@ function SavingsTracker({ initialGroupId }) {
 // Mount React Component to DOM container
 const rootElement = document.getElementById('reactSavingsTrackerRoot');
 if (rootElement) {
-    const groupId = rootElement.getAttribute('data-group-id') || 1;
-    ReactDOM.createRoot(rootElement).render(<SavingsTracker initialGroupId={groupId} />);
+    const groupId = rootElement.getAttribute('data-group-id');
+    if (groupId) ReactDOM.createRoot(rootElement).render(<SavingsTracker initialGroupId={groupId} />);
 }

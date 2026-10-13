@@ -2,16 +2,24 @@ package com.fundora;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.servlet.ServletComponentScan;
+import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 
 /**
  * Module III & VI: Main Application Entry Point
  * @ServletComponentScan enables dynamic discovery of @WebServlet (ExpenseServlet)
  * and @WebFilter (AuthFilter) components in embedded Tomcat container.
+ * Extends SpringBootServletInitializer so the WAR also deploys to an external Tomcat.
  */
 @SpringBootApplication
 @ServletComponentScan
-public class FundoraApplication {
+public class FundoraApplication extends SpringBootServletInitializer {
+
+    @Override
+    protected SpringApplicationBuilder configure(SpringApplicationBuilder builder) {
+        return builder.sources(FundoraApplication.class);
+    }
 
     public static void main(String[] args) {
         SpringApplication.run(FundoraApplication.class, args);

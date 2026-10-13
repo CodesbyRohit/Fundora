@@ -1,6 +1,7 @@
 package com.fundora.repository;
 
 import com.fundora.config.DatabaseConfig;
+import com.fundora.exception.LedgerException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -103,7 +104,8 @@ public class JdbcLedgerDao {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            // Never swallow this: an empty map would render as "all debts settled"
+            throw new LedgerException("Failed to compute ledger balances for group " + groupId, e);
         }
 
         return netBalances;

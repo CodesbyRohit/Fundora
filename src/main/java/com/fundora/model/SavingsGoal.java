@@ -1,5 +1,6 @@
 package com.fundora.model;
 
+import com.fundora.exception.LedgerException;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -64,11 +65,15 @@ public class SavingsGoal {
     }
 
     public void deposit(BigDecimal amount) {
-        if (amount != null && amount.compareTo(BigDecimal.ZERO) > 0) {
-            this.currentAmount = this.currentAmount.add(amount);
-            if (this.currentAmount.compareTo(this.targetAmount) >= 0) {
-                this.status = "COMPLETED";
-            }
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw LedgerException.invalid("Contribution amount must be greater than zero.");
+        }
+        if (!"ACTIVE".equals(this.status)) {
+            throw LedgerException.invalid("Savings goal is " + this.status + " and no longer accepts contributions.");
+        }
+        this.currentAmount = this.currentAmount.add(amount);
+        if (this.currentAmount.compareTo(this.targetAmount) >= 0) {
+            this.status = "COMPLETED";
         }
     }
 

@@ -1,15 +1,15 @@
 package com.fundora.controller;
 
+import com.fundora.config.AuthFilter;
 import com.fundora.dto.ExpenseRequestDTO;
 import com.fundora.dto.LedgerSummaryDTO;
+import com.fundora.exception.LedgerException;
 import com.fundora.model.Group;
 import com.fundora.model.GroupType;
 import com.fundora.model.SplitType;
 import com.fundora.model.User;
-import com.fundora.repository.GroupRepository;
 import com.fundora.repository.UserRepository;
 import com.fundora.service.LedgerService;
-import com.fundora.service.SavingsGoalService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -21,7 +21,9 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Module III (Servlets, JSP & MVC Pattern):
@@ -31,108 +33,151 @@ import java.util.List;
 @WebServlet(name = "ExpenseServlet", urlPatterns = {"/dashboard", "/expenses", "/ledger"})
 public class ExpenseServlet extends HttpServlet {
 
+    private static final String FLASH_ERROR = "flashError";
+    private static final String FLASH_SUCCESS = "flashSuccess";
+
     private LedgerService ledgerService;
-    private GroupRepository groupRepository;
     private UserRepository userRepository;
-    private SavingsGoalService savingsGoalService;
 
     @Override
     public void init() throws ServletException {
         super.init();
         WebApplicationContext ctx = WebApplicationContextUtils.getRequiredWebApplicationContext(getServletContext());
         this.ledgerService = ctx.getBean(LedgerService.class);
-        this.groupRepository = ctx.getBean(GroupRepository.class);
         this.userRepository = ctx.getBean(UserRepository.class);
-        this.savingsGoalService = ctx.getBean(SavingsGoalService.class);
     }
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) 
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
-        HttpSession session = request.getSession();
-        Long currentUserId = (Long) session.getAttribute("currentUserId");
-        if (currentUserId == null) {
-            currentUserId = 1L; // Fallback to Dnyaneshwar Sangale
-            session.setAttribute("currentUserId", currentUserId);
-        }
 
-        User currentUser = userRepository.findById(currentUserId).orElse(null);
+        HttpSession session = request.getSession();
+        User currentUser = resolveCurrentUser(session);
+        if (currentUser == null) {
+            // AuthFilter guarantees a user id; it can still point at a user that no longer exists
+            session.invalidate();
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
         request.setAttribute("currentUser", currentUser);
+        moveFlash(session, request, FLASH_ERROR);
+        moveFlash(session, request, FLASH_SUCCESS);
 
-        String path = request.getServletPath();
-        String groupIdParam = request.getParameter("groupId");
-        Long groupId = (groupIdParam != null && !groupIdParam.isEmpty()) ? Long.parseLong(groupIdParam) : 1L;
-
-        List<Group> userGroups = groupRepository.findAll();
+        // Only show the groups the signed-in user belongs to
+        List<Group> userGroups = ledgerService.getGroupsForUser(currentUser.getId());
         request.setAttribute("groups", userGroups);
-        request.setAttribute("selectedGroupId", groupId);
+        request.setAttribute("allUsers", userRepository.findAll());
 
-        if ("/ledger".equals(path)) {
-            LedgerSummaryDTO ledgerSummary = ledgerService.getGroupLedger(groupId);
-            request.setAttribute("ledger", ledgerSummary);
-            request.getRequestDispatcher("/WEB-INF/jsp/group-ledger.jsp").forward(request, response);
-        } else {
-            // Dashboard view (handles /dashboard and /expenses)
-            LedgerSummaryDTO defaultLedger = ledgerService.getGroupLedger(groupId);
-            request.setAttribute("ledger", defaultLedger);
-            request.setAttribute("savingsGoals", savingsGoalService.getAllGoals());
-            request.getRequestDispatcher("/WEB-INF/jsp/dashboard.jsp").forward(request, response);
+        Long requestedId = parseId(request.getParameter("groupId"));
+        Group selected = userGroups.stream()
+                .filter(g -> g.getId().equals(requestedId))
+                .findFirst()
+                .orElse(userGroups.isEmpty() ? null : userGroups.get(0));
+        if (requestedId != null && (selected == null || !selected.getId().equals(requestedId))) {
+            request.setAttribute(FLASH_ERROR, "That group does not exist or you are not a member of it.");
         }
+
+        if (selected != null) {
+            LedgerSummaryDTO ledgerSummary = ledgerService.getGroupLedger(selected.getId());
+            request.setAttribute("selectedGroupId", selected.getId());
+            request.setAttribute("ledger", ledgerSummary);
+        }
+
+        String view = "/ledger".equals(request.getServletPath()) ? "group-ledger.jsp" : "dashboard.jsp";
+        request.getRequestDispatcher("/WEB-INF/jsp/" + view).forward(request, response);
     }
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) 
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
+
+        request.setCharacterEncoding("UTF-8");
         HttpSession session = request.getSession();
-        Long currentUserId = (Long) session.getAttribute("currentUserId");
-        if (currentUserId == null) currentUserId = 1L;
-
+        Long currentUserId = (Long) session.getAttribute(AuthFilter.SESSION_USER_ID);
         String action = request.getParameter("action");
+        Long groupId = parseId(request.getParameter("groupId"));
+        String redirectTo = "/dashboard" + (groupId != null ? "?groupId=" + groupId : "");
 
-        if ("addExpense".equals(action)) {
-            Long groupId = Long.parseLong(request.getParameter("groupId"));
-            String title = request.getParameter("title");
-            BigDecimal amount = new BigDecimal(request.getParameter("amount"));
-            String category = request.getParameter("category");
-            String splitTypeStr = request.getParameter("splitType");
+        try {
+            if ("addExpense".equals(action)) {
+                ExpenseRequestDTO dto = new ExpenseRequestDTO();
+                dto.setGroupId(groupId);
+                dto.setPaidByUserId(currentUserId);
+                dto.setTitle(request.getParameter("title"));
+                dto.setAmount(parseAmount(request.getParameter("amount")));
+                dto.setCategory(request.getParameter("category"));
+                dto.setSplitType(parseEnum(SplitType.class, request.getParameter("splitType"), SplitType.EQUAL));
 
-            ExpenseRequestDTO dto = new ExpenseRequestDTO();
-            dto.setGroupId(groupId);
-            dto.setPaidByUserId(currentUserId);
-            dto.setTitle(title);
-            dto.setAmount(amount);
-            dto.setCategory(category);
-            dto.setSplitType(splitTypeStr != null ? SplitType.valueOf(splitTypeStr) : SplitType.EQUAL);
-
-            ledgerService.addExpense(dto);
-            response.sendRedirect(request.getContextPath() + "/dashboard?groupId=" + groupId);
-        } else if ("createGroup".equals(action)) {
-            String name = request.getParameter("name");
-            String description = request.getParameter("description");
-            String typeStr = request.getParameter("groupType");
-            GroupType gType = (typeStr != null && !typeStr.isEmpty()) ? GroupType.valueOf(typeStr) : GroupType.FLATMATE_RECURRING;
-            
-            User creator = userRepository.findById(currentUserId).orElse(null);
-            if (creator == null) {
-                creator = userRepository.findAll().stream().findFirst().orElse(null);
-            }
-
-            Group newGroup = new Group(name, description, gType, creator);
-            String[] memberIds = request.getParameterValues("memberIds");
-            if (memberIds != null && memberIds.length > 0) {
-                for (String mId : memberIds) {
-                    userRepository.findById(Long.parseLong(mId)).ifPresent(newGroup::addMember);
+                ledgerService.addExpense(dto);
+                session.setAttribute(FLASH_SUCCESS, "Expense \"" + dto.getTitle().trim() + "\" recorded and split.");
+            } else if ("createGroup".equals(action)) {
+                List<Long> memberIds = new ArrayList<>();
+                String[] rawIds = request.getParameterValues("memberIds");
+                if (rawIds != null) {
+                    for (String raw : rawIds) {
+                        Long id = parseId(raw);
+                        if (id == null) {
+                            throw LedgerException.invalid("Invalid member selection.");
+                        }
+                        memberIds.add(id);
+                    }
                 }
-            } else {
-                userRepository.findAll().forEach(newGroup::addMember);
+                GroupType type = parseEnum(GroupType.class, request.getParameter("groupType"), GroupType.FLATMATE_RECURRING);
+                Group saved = ledgerService.createGroup(
+                        request.getParameter("name"), request.getParameter("description"), type, currentUserId, memberIds);
+                session.setAttribute(FLASH_SUCCESS, "Group \"" + saved.getName() + "\" created with " + saved.getMembers().size() + " members.");
+                redirectTo = "/dashboard?groupId=" + saved.getId();
             }
+        } catch (LedgerException e) {
+            session.setAttribute(FLASH_ERROR, e.getMessage());
+        }
 
-            Group saved = groupRepository.save(newGroup);
-            response.sendRedirect(request.getContextPath() + "/dashboard?groupId=" + saved.getId());
-        } else {
-            response.sendRedirect(request.getContextPath() + "/dashboard");
+        response.sendRedirect(request.getContextPath() + redirectTo);
+    }
+
+    private User resolveCurrentUser(HttpSession session) {
+        Long userId = (Long) session.getAttribute(AuthFilter.SESSION_USER_ID);
+        return userId == null ? null : userRepository.findById(userId).orElse(null);
+    }
+
+    private static void moveFlash(HttpSession session, HttpServletRequest request, String key) {
+        Object value = session.getAttribute(key);
+        if (value != null) {
+            request.setAttribute(key, value);
+            session.removeAttribute(key);
+        }
+    }
+
+    private static Long parseId(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        try {
+            return Long.valueOf(raw.trim());
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private static BigDecimal parseAmount(String raw) {
+        if (raw == null || raw.isBlank()) {
+            throw LedgerException.invalid("Expense amount is required.");
+        }
+        try {
+            return new BigDecimal(raw.trim());
+        } catch (NumberFormatException e) {
+            throw LedgerException.invalid("Expense amount must be a number.");
+        }
+    }
+
+    private static <E extends Enum<E>> E parseEnum(Class<E> type, String raw, E fallback) {
+        if (raw == null || raw.isBlank()) {
+            return fallback;
+        }
+        try {
+            return Enum.valueOf(type, raw.trim().toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException e) {
+            throw LedgerException.invalid("Unknown option: " + raw);
         }
     }
 }

@@ -374,3 +374,67 @@ body {
 .modal-close:hover {
     color: #fff;
 }
+
+/* Inline Alerts (flash messages on login / dashboard) */
+.alert-box {
+    padding: 0.85rem 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.25rem;
+    font-size: 0.9rem;
+}
+
+.alert-danger {
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid var(--danger);
+    color: #fca5a5;
+}
+
+.alert-success {
+    background: rgba(16, 185, 129, 0.15);
+    border: 1px solid var(--accent);
+    color: #6ee7b7;
+}
+
+.toast.toast-success { border-color: var(--accent); }
+.toast.toast-error { border-color: var(--danger); }
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Small screens: let the navbar, debt rows and wide tables wrap or scroll instead of overflowing */
+@media (max-width: 640px) {
+    .navbar {
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        padding: 0.75rem 1rem;
+    }
+
+    .user-profile-badge {
+        flex-wrap: wrap;
+        border-radius: 12px;
+    }
+
+    .container {
+        padding: 0 1rem;
+    }
+
+    .debt-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+
+    .data-table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+
+    .toast-container {
+        left: 1rem;
+        right: 1rem;
+        bottom: 1rem;
+    }
+}

@@ -35,19 +35,29 @@ public class SavingsGoalService {
 
     @Transactional
     public SavingsGoal createGoal(Long groupId, String title, BigDecimal targetAmount, LocalDate deadline) {
+        if (title == null || title.isBlank()) {
+            throw LedgerException.invalid("Goal title is required.");
+        }
+        if (title.trim().length() > 150) {
+            throw LedgerException.invalid("Goal title must be at most 150 characters.");
+        }
+        BigDecimal target = LedgerService.normalizeAmount(targetAmount, "Target amount");
+        if (deadline != null && deadline.isBefore(LocalDate.now())) {
+            throw LedgerException.invalid("Goal deadline cannot be in the past.");
+        }
         Group group = groupRepository.findById(groupId)
-                .orElseThrow(() -> new LedgerException("Group not found with ID: " + groupId));
+                .orElseThrow(() -> LedgerException.notFound("Group not found with ID: " + groupId));
 
-        SavingsGoal goal = new SavingsGoal(group, title, targetAmount, deadline);
+        SavingsGoal goal = new SavingsGoal(group, title.trim(), target, deadline);
         return savingsGoalRepository.save(goal);
     }
 
     @Transactional
     public SavingsGoal contribute(Long goalId, BigDecimal amount) {
         SavingsGoal goal = savingsGoalRepository.findById(goalId)
-                .orElseThrow(() -> new LedgerException("Savings goal not found with ID: " + goalId));
+                .orElseThrow(() -> LedgerException.notFound("Savings goal not found with ID: " + goalId));
 
-        goal.deposit(amount);
+        goal.deposit(LedgerService.normalizeAmount(amount, "Contribution amount"));
         return savingsGoalRepository.save(goal);
     }
 }

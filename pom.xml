@@ -14,6 +14,8 @@
     <groupId>com.fundora</groupId>
     <artifactId>fundora-fintech</artifactId>
     <version>1.0.0-SNAPSHOT</version>
+    <!-- WAR packaging: JSPs under src/main/webapp are only served from an executable WAR, not a JAR -->
+    <packaging>war</packaging>
     <name>fundora-fintech</name>
     <description>Fundora Social FinTech - Full Stack Java Web Prototype (Mumbai Univ Syllabus Modules I-VI)</description>
 
@@ -93,6 +95,7 @@
     </dependencies>
 
     <build>
+        <finalName>fundora-fintech</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>

@@ -104,55 +104,57 @@ CREATE TABLE IF NOT EXISTS nudge_logs (
 
 -- =========================================================================
 -- SEED DATA (Mumbai University College Flatmates & Goa Trip Scenario)
+-- INSERT IGNORE + explicit IDs keep seeding idempotent, so restarting against
+-- a persistent MySQL database does not fail on duplicate primary keys.
 -- =========================================================================
 
 -- Seed Users (4 College Flatmates)
-INSERT INTO users (id, name, email, phone_number, upi_id, role, wallet_balance) VALUES
+INSERT IGNORE INTO users (id, name, email, phone_number, upi_id, role, wallet_balance) VALUES
 (1, 'Dnyaneshwar Sangale', 'dnyaneshwar@fundora.app', '9820112233', 'dnyaneshwar@okhdfcbank', 'STUDENT', 2500.00),
 (2, 'Tejasvee Patil', 'tejasvee@fundora.app', '9820223344', 'tejasvee@icici', 'STUDENT', 1800.00),
 (3, 'Bharati Sharma', 'bharati@fundora.app', '9820334455', 'bharati@paytm', 'STUDENT', 3200.00),
 (4, 'Atharva Sawant', 'atharva@fundora.app', '9820445566', 'atharva@axisbank', 'STUDENT', 1200.00);
 
 -- Seed Groups
-INSERT INTO fundora_groups (id, name, description, group_type, created_by_user_id) VALUES
+INSERT IGNORE INTO fundora_groups (id, name, description, group_type, created_by_user_id) VALUES
 (1, 'Gokul Flat 402 (Powai)', 'Monthly Rent, WiFi, Cook, & Grocery Split', 'FLATMATE_RECURRING', 1),
 (2, 'Goa Semester Break Trip', 'Villa, Beach Sports, Car Rental & Food', 'TRIP_EVENT', 2);
 
 -- Group Memberships
-INSERT INTO group_members (group_id, user_id) VALUES
+INSERT IGNORE INTO group_members (group_id, user_id) VALUES
 (1, 1), (1, 2), (1, 3), (1, 4),
 (2, 1), (2, 2), (2, 3), (2, 4);
 
 -- Seed Expenses
 -- Expense 1: Dnyaneshwar paid 12,000 for Flat Groceries & Water Can
-INSERT INTO expenses (id, group_id, paid_by_user_id, title, amount, category, split_type) VALUES
+INSERT IGNORE INTO expenses (id, group_id, paid_by_user_id, title, amount, category, split_type) VALUES
 (1, 1, 1, 'Monthly D-Mart Groceries & Supplies', 12000.00, 'GROCERIES', 'EQUAL'),
 (2, 1, 2, 'High-Speed Fiber Internet Bill', 2400.00, 'UTILITIES', 'EQUAL'),
 (3, 2, 3, 'Goa Beach Resort Booking Advance', 16000.00, 'ACCOMMODATION', 'EQUAL');
 
 -- Seed Expense Splits (4 members share equally)
 -- Expense 1 (12000 / 4 = 3000 each)
-INSERT INTO expense_splits (expense_id, user_id, share_amount, settled) VALUES
-(1, 1, 3000.00, TRUE),
-(1, 2, 3000.00, FALSE),
-(1, 3, 3000.00, FALSE),
-(1, 4, 3000.00, FALSE);
+INSERT IGNORE INTO expense_splits (id, expense_id, user_id, share_amount, settled) VALUES
+(1, 1, 1, 3000.00, TRUE),
+(2, 1, 2, 3000.00, FALSE),
+(3, 1, 3, 3000.00, FALSE),
+(4, 1, 4, 3000.00, FALSE);
 
 -- Expense 2 (2400 / 4 = 600 each)
-INSERT INTO expense_splits (expense_id, user_id, share_amount, settled) VALUES
-(2, 1, 600.00, FALSE),
-(2, 2, 600.00, TRUE),
-(2, 3, 600.00, FALSE),
-(2, 4, 600.00, FALSE);
+INSERT IGNORE INTO expense_splits (id, expense_id, user_id, share_amount, settled) VALUES
+(5, 2, 1, 600.00, FALSE),
+(6, 2, 2, 600.00, TRUE),
+(7, 2, 3, 600.00, FALSE),
+(8, 2, 4, 600.00, FALSE);
 
 -- Expense 3 (16000 / 4 = 4000 each)
-INSERT INTO expense_splits (expense_id, user_id, share_amount, settled) VALUES
-(3, 1, 4000.00, FALSE),
-(3, 2, 4000.00, FALSE),
-(3, 3, 4000.00, TRUE),
-(3, 4, 4000.00, FALSE);
+INSERT IGNORE INTO expense_splits (id, expense_id, user_id, share_amount, settled) VALUES
+(9, 3, 1, 4000.00, FALSE),
+(10, 3, 2, 4000.00, FALSE),
+(11, 3, 3, 4000.00, TRUE),
+(12, 3, 4, 4000.00, FALSE);
 
 -- Seed Savings Goals
-INSERT INTO savings_goals (id, group_id, title, target_amount, current_amount, deadline, status) VALUES
+INSERT IGNORE INTO savings_goals (id, group_id, title, target_amount, current_amount, deadline, status) VALUES
 (1, 2, 'Goa Scuba Diving & Water Sports Fund', 20000.00, 14500.00, '2026-12-25', 'ACTIVE'),
 (2, 1, 'Living Room Smart TV Upgrade', 18000.00, 9000.00, '2026-11-15', 'ACTIVE');

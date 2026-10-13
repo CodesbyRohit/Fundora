@@ -10,6 +10,8 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Module I & II: Exact split strategy verifying exact split total validation
@@ -23,13 +25,19 @@ public class ExactExpenseSplitter implements ExpenseSplitter {
             throw new LedgerMismatchException("Exact split requires itemized share amounts for each participant.");
         }
 
-        BigDecimal sumOfShares = BigDecimal.ZERO;
-        for (BigDecimal share : splitData.values()) {
-            if (share != null) {
-                sumOfShares = sumOfShares.add(share);
+        // Every itemized share must belong to a participant, otherwise it would be silently dropped
+        // and the ledger would no longer balance.
+        Set<Long> participantIds = participants.stream().map(User::getId).collect(Collectors.toSet());
+        for (Map.Entry<Long, BigDecimal> entry : splitData.entrySet()) {
+            if (!participantIds.contains(entry.getKey())) {
+                throw new LedgerMismatchException("User " + entry.getKey() + " has a share but is not a participant of this expense.");
+            }
+            if (entry.getValue() == null || entry.getValue().signum() < 0) {
+                throw new LedgerMismatchException("Share for user " + entry.getKey() + " must be zero or a positive amount.");
             }
         }
 
+        BigDecimal sumOfShares = splitData.values().stream().reduce(BigDecimal.ZERO, BigDecimal::add);
         if (sumOfShares.compareTo(expense.getAmount()) != 0) {
             throw new LedgerMismatchException(
                 String.format("Split total (%s) does not match total expense amount (%s).", sumOfShares, expense.getAmount())
