@@ -112,7 +112,7 @@
                     <span style="font-size: 0.8rem; color: var(--text-muted);">Quick Sign-In</span>
                 </div>
                 <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1.25rem;">
-                    Select any student flatmate or hostel manager persona to instantly test peer debt splits and smart nudges:
+                    Select any student flatmate persona to instantly test peer debt splits and smart nudges:
                 </p>
 
                 <form action="${pageContext.request.contextPath}/login" method="POST" id="quickLoginForm">
@@ -141,7 +141,7 @@
                 <form action="${pageContext.request.contextPath}/login" method="POST">
                     <div class="form-group">
                         <label class="form-label">Email Address or Registered Phone</label>
-                        <input type="text" name="emailOrPhone" class="form-control" placeholder="e.g. aarav@fundora.app or 9820112233" required/>
+                        <input type="text" name="emailOrPhone" class="form-control" placeholder="e.g. dnyaneshwar@fundora.app or 9820112233" required/>
                     </div>
 
                     <div class="form-group">

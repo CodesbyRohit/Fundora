@@ -52,7 +52,7 @@ public class ExpenseServlet extends HttpServlet {
         HttpSession session = request.getSession();
         Long currentUserId = (Long) session.getAttribute("currentUserId");
         if (currentUserId == null) {
-            currentUserId = 1L; // Fallback to Aarav Sharma
+            currentUserId = 1L; // Fallback to Dnyaneshwar Sangale
             session.setAttribute("currentUserId", currentUserId);
         }
 

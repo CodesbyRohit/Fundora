@@ -40,47 +40,39 @@
                     <span style="font-size: 0.8rem; color: var(--text-muted);">Quick Sign-In</span>
                 </div>
                 <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1.25rem;">
-                    Select any student flatmate or hostel manager persona to instantly test peer debt splits:
+                    Select any student flatmate persona to instantly test peer debt splits:
                 </p>
 
-                <div class="persona-card" onclick="selectPersona('Aarav Sharma', 'aarav@okhdfcbank', 'STUDENT', '2,500.00')">
+                <div class="persona-card" onclick="selectPersona('Dnyaneshwar Sangale', 'dnyaneshwar@okhdfcbank', 'STUDENT', '2,500.00')">
                     <div>
-                        <span class="persona-name">👤 Aarav Sharma</span>
-                        <span class="persona-meta">UPI: aarav@okhdfcbank | Wallet: ₹2,500.00</span>
+                        <span class="persona-name">👤 Dnyaneshwar Sangale</span>
+                        <span class="persona-meta">UPI: dnyaneshwar@okhdfcbank | Wallet: ₹2,500.00</span>
                     </div>
                     <div><span class="role-badge">STUDENT</span></div>
                 </div>
 
-                <div class="persona-card" onclick="selectPersona('Diya Patel', 'diya@icici', 'STUDENT', '1,800.00')">
+                <div class="persona-card" onclick="selectPersona('Tejasvee Patil', 'tejasvee@icici', 'STUDENT', '1,800.00')">
                     <div>
-                        <span class="persona-name">👤 Diya Patel</span>
-                        <span class="persona-meta">UPI: diya@icici | Wallet: ₹1,800.00</span>
+                        <span class="persona-name">👤 Tejasvee Patil</span>
+                        <span class="persona-meta">UPI: tejasvee@icici | Wallet: ₹1,800.00</span>
                     </div>
                     <div><span class="role-badge">STUDENT</span></div>
                 </div>
 
-                <div class="persona-card" onclick="selectPersona('Rohan Verma', 'rohan@paytm', 'STUDENT', '3,200.00')">
+                <div class="persona-card" onclick="selectPersona('Bharati Sharma', 'bharati@paytm', 'STUDENT', '3,200.00')">
                     <div>
-                        <span class="persona-name">👤 Rohan Verma</span>
-                        <span class="persona-meta">UPI: rohan@paytm | Wallet: ₹3,200.00</span>
+                        <span class="persona-name">👤 Bharati Sharma</span>
+                        <span class="persona-meta">UPI: bharati@paytm | Wallet: ₹3,200.00</span>
                     </div>
                     <div><span class="role-badge">STUDENT</span></div>
                 </div>
 
-                <div class="persona-card" onclick="selectPersona('Simran Kaur', 'simran@axisbank', 'STUDENT', '1,200.00')">
+                <div class="persona-card" onclick="selectPersona('Atharva Sawant', 'atharva@axisbank', 'STUDENT', '1,200.00')">
                     <div>
-                        <span class="persona-name">👤 Simran Kaur</span>
-                        <span class="persona-meta">UPI: simran@axisbank | Wallet: ₹1,200.00</span>
+                        <span class="persona-name">👤 Atharva Sawant</span>
+                        <span class="persona-meta">UPI: atharva@axisbank | Wallet: ₹1,200.00</span>
                     </div>
                     <div><span class="role-badge">STUDENT</span></div>
-                </div>
-
-                <div class="persona-card" onclick="selectPersona('Mr. Kulkarni', 'hostel@sbi', 'HOSTEL_MANAGER', '0.00')">
-                    <div>
-                        <span class="persona-name">👤 Mr. Kulkarni (Hostel Mgr)</span>
-                        <span class="persona-meta">UPI: hostel@sbi | Wallet: ₹0.00</span>
-                    </div>
-                    <div><span class="role-badge manager">HOSTEL_MANAGER</span></div>
                 </div>
             </div>
 
@@ -92,7 +84,7 @@
                 <form onsubmit="handleFormLogin(event)">
                     <div class="form-group">
                         <label class="form-label">Email Address or Registered Phone</label>
-                        <input type="text" id="emailInput" class="form-control" placeholder="e.g. aarav@fundora.app" value="aarav@fundora.app" required/>
+                        <input type="text" id="emailInput" class="form-control" placeholder="e.g. dnyaneshwar@fundora.app" value="dnyaneshwar@fundora.app" required/>
                     </div>
 
                     <div class="form-group">
@@ -118,7 +110,7 @@
         function handleFormLogin(e) {
             e.preventDefault();
             const email = document.getElementById('emailInput').value;
-            selectPersona('Aarav Sharma', 'aarav@okhdfcbank', 'STUDENT', '2,500.00');
+            selectPersona('Dnyaneshwar Sangale', 'dnyaneshwar@okhdfcbank', 'STUDENT', '2,500.00');
         }
     </script>
 </body>

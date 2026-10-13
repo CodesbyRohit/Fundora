@@ -106,13 +106,12 @@ CREATE TABLE IF NOT EXISTS nudge_logs (
 -- SEED DATA (Mumbai University College Flatmates & Goa Trip Scenario)
 -- =========================================================================
 
--- Seed Users
+-- Seed Users (4 College Flatmates)
 INSERT INTO users (id, name, email, phone_number, upi_id, role, wallet_balance) VALUES
-(1, 'Aarav Sharma', 'aarav@fundora.app', '9820112233', 'aarav@okhdfcbank', 'STUDENT', 2500.00),
-(2, 'Diya Patel', 'diya@fundora.app', '9820223344', 'diya@icici', 'STUDENT', 1800.00),
-(3, 'Rohan Verma', 'rohan@fundora.app', '9820334455', 'rohan@paytm', 'STUDENT', 3200.00),
-(4, 'Simran Kaur', 'simran@fundora.app', '9820445566', 'simran@axisbank', 'STUDENT', 1200.00),
-(5, 'Mr. Kulkarni (Hostel Mgr)', 'kulkarni@hostel.app', '9820556677', 'hostel@sbi', 'HOSTEL_MANAGER', 0.00);
+(1, 'Dnyaneshwar Sangale', 'dnyaneshwar@fundora.app', '9820112233', 'dnyaneshwar@okhdfcbank', 'STUDENT', 2500.00),
+(2, 'Tejasvee Patil', 'tejasvee@fundora.app', '9820223344', 'tejasvee@icici', 'STUDENT', 1800.00),
+(3, 'Bharati Sharma', 'bharati@fundora.app', '9820334455', 'bharati@paytm', 'STUDENT', 3200.00),
+(4, 'Atharva Sawant', 'atharva@fundora.app', '9820445566', 'atharva@axisbank', 'STUDENT', 1200.00);
 
 -- Seed Groups
 INSERT INTO fundora_groups (id, name, description, group_type, created_by_user_id) VALUES
@@ -125,7 +124,7 @@ INSERT INTO group_members (group_id, user_id) VALUES
 (2, 1), (2, 2), (2, 3), (2, 4);
 
 -- Seed Expenses
--- Expense 1: Aarav paid 12,000 for Flat Groceries & Water Can
+-- Expense 1: Dnyaneshwar paid 12,000 for Flat Groceries & Water Can
 INSERT INTO expenses (id, group_id, paid_by_user_id, title, amount, category, split_type) VALUES
 (1, 1, 1, 'Monthly D-Mart Groceries & Supplies', 12000.00, 'GROCERIES', 'EQUAL'),
 (2, 1, 2, 'High-Speed Fiber Internet Bill', 2400.00, 'UTILITIES', 'EQUAL'),
