@@ -3,6 +3,7 @@ package com.fundora.controller;
 import com.fundora.dto.ExpenseRequestDTO;
 import com.fundora.dto.LedgerSummaryDTO;
 import com.fundora.model.Group;
+import com.fundora.model.GroupType;
 import com.fundora.model.SplitType;
 import com.fundora.model.User;
 import com.fundora.repository.GroupRepository;
@@ -107,6 +108,29 @@ public class ExpenseServlet extends HttpServlet {
 
             ledgerService.addExpense(dto);
             response.sendRedirect(request.getContextPath() + "/dashboard?groupId=" + groupId);
+        } else if ("createGroup".equals(action)) {
+            String name = request.getParameter("name");
+            String description = request.getParameter("description");
+            String typeStr = request.getParameter("groupType");
+            GroupType gType = (typeStr != null && !typeStr.isEmpty()) ? GroupType.valueOf(typeStr) : GroupType.FLATMATE_RECURRING;
+            
+            User creator = userRepository.findById(currentUserId).orElse(null);
+            if (creator == null) {
+                creator = userRepository.findAll().stream().findFirst().orElse(null);
+            }
+
+            Group newGroup = new Group(name, description, gType, creator);
+            String[] memberIds = request.getParameterValues("memberIds");
+            if (memberIds != null && memberIds.length > 0) {
+                for (String mId : memberIds) {
+                    userRepository.findById(Long.parseLong(mId)).ifPresent(newGroup::addMember);
+                }
+            } else {
+                userRepository.findAll().forEach(newGroup::addMember);
+            }
+
+            Group saved = groupRepository.save(newGroup);
+            response.sendRedirect(request.getContextPath() + "/dashboard?groupId=" + saved.getId());
         } else {
             response.sendRedirect(request.getContextPath() + "/dashboard");
         }

@@ -55,6 +55,37 @@ public class FundoraRestController {
         return ResponseEntity.ok(groupRepository.findAll());
     }
 
+    @PostMapping("/groups")
+    public ResponseEntity<Group> createGroup(@RequestBody GroupRequestDTO dto) {
+        Long creatorId = dto.getCreatedByUserId() != null ? dto.getCreatedByUserId() : 1L;
+        User creator = userRepository.findById(creatorId).orElse(null);
+        if (creator == null) {
+            creator = userRepository.findAll().stream().findFirst().orElse(null);
+        }
+
+        Group group = new Group(
+            dto.getName(),
+            dto.getDescription(),
+            dto.getGroupType() != null ? dto.getGroupType() : GroupType.FLATMATE_RECURRING,
+            creator
+        );
+
+        if (dto.getMemberIds() != null && !dto.getMemberIds().isEmpty()) {
+            List<User> selectedMembers = userRepository.findAllById(dto.getMemberIds());
+            for (User u : selectedMembers) {
+                group.addMember(u);
+            }
+        } else {
+            List<User> allUsers = userRepository.findAll();
+            for (User u : allUsers) {
+                group.addMember(u);
+            }
+        }
+
+        Group saved = groupRepository.save(group);
+        return ResponseEntity.ok(saved);
+    }
+
     // --- SHARED LEDGER & EXPENSE ENDPOINTS ---
 
     @GetMapping("/groups/{groupId}/ledger")

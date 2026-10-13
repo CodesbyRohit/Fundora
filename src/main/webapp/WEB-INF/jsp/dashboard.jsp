@@ -50,6 +50,9 @@
                     </c:forEach>
                 </select>
             </form>
+            <button type="button" class="btn btn-accent" onclick="openCreateGroupModal()" style="display: flex; align-items: center; gap: 0.4rem; padding: 0.65rem 1.15rem; font-weight: 600; cursor: pointer;">
+                ➕ Create New Group
+            </button>
             <div style="margin-left: auto; display: flex; gap: 0.75rem;">
                 <a href="https://drive.google.com/drive/folders/1na8wxfnAwbS5o1-GlbSOibjOmlkwBQHj" target="_blank" rel="noopener noreferrer" class="btn btn-accent" style="text-decoration: none;">
                     📁 Assignment Folder
@@ -246,8 +249,71 @@
 
     </div>
 
+    <!-- Create Group Modal -->
+    <div id="createGroupModal" class="modal-overlay" style="display: none;">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 style="color: #fff; margin: 0; font-size: 1.25rem;">✨ Create New Group</h3>
+                <button type="button" onclick="closeCreateGroupModal()" class="modal-close">&times;</button>
+            </div>
+            <form action="${pageContext.request.contextPath}/dashboard" method="POST">
+                <input type="hidden" name="action" value="createGroup" />
+                <div class="form-group">
+                    <label class="form-label">Group Name *</label>
+                    <input type="text" name="name" class="form-control" placeholder="e.g. Manali College Trip 2026 / Room 402 Groceries" required />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Group Type</label>
+                    <select name="groupType" class="form-control">
+                        <option value="FLATMATE_RECURRING">Flatmate & Monthly Recurring (Rent, Groceries, WiFi)</option>
+                        <option value="TRIP_EVENT">Trip, Outing & Campus Event (Vacation, Parties)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description / Purpose</label>
+                    <input type="text" name="description" class="form-control" placeholder="e.g. Shared expenses among flatmates" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Select Group Members (Flatmates)</label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; background: var(--bg-card-alt); padding: 0.85rem; border-radius: 8px;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: #fff; cursor: pointer;">
+                            <input type="checkbox" name="memberIds" value="1" checked /> Dnyaneshwar Sangale
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: #fff; cursor: pointer;">
+                            <input type="checkbox" name="memberIds" value="2" checked /> Tejasvee Patil
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: #fff; cursor: pointer;">
+                            <input type="checkbox" name="memberIds" value="3" checked /> Bharati Sharma
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: #fff; cursor: pointer;">
+                            <input type="checkbox" name="memberIds" value="4" checked /> Atharva Sawant
+                        </label>
+                    </div>
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+                    <button type="button" class="btn btn-nudge" onclick="closeCreateGroupModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary" style="padding: 0.65rem 1.5rem;">🚀 Create Group</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <script src="${pageContext.request.contextPath}/static/js/app.js"></script>
     <script type="text/babel" src="${pageContext.request.contextPath}/static/js/react-components.js"></script>
+    <script>
+        function openCreateGroupModal() {
+            document.getElementById('createGroupModal').style.display = 'flex';
+        }
+        function closeCreateGroupModal() {
+            document.getElementById('createGroupModal').style.display = 'none';
+        }
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeCreateGroupModal();
+        });
+        document.getElementById('createGroupModal').addEventListener('click', (e) => {
+            if (e.target.id === 'createGroupModal') closeCreateGroupModal();
+        });
+    </script>
 </body>
 </html>
